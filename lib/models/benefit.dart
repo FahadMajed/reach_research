@@ -35,8 +35,9 @@ class Benefit {
       benefitName: "", value: "", type: BenefitType.values[0], place: "");
 
   @override
-  String toString() =>
-      'Benefit(benefitName: $benefitName, value: $value, place: $place)';
+  String toString() {
+    return 'Benefit(benefitName: $benefitName, value: $value, place: $place, type: $type)';
+  }
 
   Benefit copyWith({
     String? benefitName,
@@ -50,6 +51,25 @@ class Benefit {
       place: place ?? this.place,
       type: type ?? this.type,
     );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is Benefit &&
+        other.benefitName == benefitName &&
+        other.value == value &&
+        other.place == place &&
+        other.type == type;
+  }
+
+  @override
+  int get hashCode {
+    return benefitName.hashCode ^
+        value.hashCode ^
+        place.hashCode ^
+        type.hashCode;
   }
 }
 

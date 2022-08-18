@@ -1,6 +1,15 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:reach_auth/providers/providers.dart';
 import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
+
+final enrolledPvdr =
+    StateNotifierProvider<EnrolledListNotifier, AsyncValue<List<Research>>>(
+  (ref) {
+    final userId = ref.watch(userPvdr).value?.uid;
+
+    return EnrolledListNotifier(userId ?? "", ref.watch(researchsRepoPvdr));
+  },
+);
 
 class EnrolledListNotifier extends StateNotifier<AsyncValue<List<Research>>> {
   final String uid;
@@ -8,7 +17,11 @@ class EnrolledListNotifier extends StateNotifier<AsyncValue<List<Research>>> {
 
   EnrolledListNotifier(this.uid, this.repository)
       : super(const AsyncValue.loading()) {
-    getEnrolledToResearchs();
+    if (uid.isNotEmpty) {
+      getEnrolledToResearchs();
+    } else {
+      const AsyncData([]);
+    }
   }
 
   Future<void> getEnrolledToResearchs({isRefreshing = false}) async {
@@ -86,6 +99,6 @@ class EnrolledListNotifier extends StateNotifier<AsyncValue<List<Research>>> {
       Research research, String participantId) async {
     research.removeParticipant(participantId);
     await updateResearch(updatedResearch: research);
-    removeResearch(research.researchId!);
+    removeResearch(research.researchId);
   }
 }

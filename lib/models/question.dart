@@ -38,4 +38,42 @@ class Question {
 
   factory Question.fromJson(String source) =>
       Question.fromMap(json.decode(source));
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is Question &&
+        other.questionText == questionText &&
+        other.expectedAnswer == expectedAnswer &&
+        other.isCriterionQuestion == isCriterionQuestion &&
+        other.criterion == criterion;
+  }
+
+  @override
+  int get hashCode {
+    return questionText.hashCode ^
+        expectedAnswer.hashCode ^
+        isCriterionQuestion.hashCode ^
+        criterion.hashCode;
+  }
+
+  Question copyWith({
+    String? questionText,
+    bool? expectedAnswer,
+    bool? isCriterionQuestion,
+    Criterion? criterion,
+  }) {
+    return Question(
+      questionText: questionText ?? this.questionText,
+      expectedAnswer: expectedAnswer ?? this.expectedAnswer,
+      isCriterionQuestion: isCriterionQuestion ?? this.isCriterionQuestion,
+      criterion: criterion ?? this.criterion,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'Question(questionText: $questionText, expectedAnswer: $expectedAnswer, isCriterionQuestion: $isCriterionQuestion, criterion: $criterion)';
+  }
 }

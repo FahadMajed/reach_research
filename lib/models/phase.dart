@@ -5,7 +5,7 @@ class Phase {
   final String descriptionHint;
 
   final bool isChecked;
-  final String date;
+  final String? date;
 
   Phase({
     this.title = "",
@@ -13,7 +13,7 @@ class Phase {
     this.isChecked = false,
     this.phaseHint = "",
     this.descriptionHint = "",
-    this.date = "2022-8-12",
+    this.date,
   });
 
   factory Phase.fromFirestore(Map data) {
@@ -26,14 +26,7 @@ class Phase {
 
   @override
   String toString() {
-    return title +
-        "," +
-        description +
-        "," +
-        "," +
-        isChecked.toString() +
-        "," +
-        date;
+    return 'Phase(title: $title, description: $description, phaseHint: $phaseHint, descriptionHint: $descriptionHint, isChecked: $isChecked, date: $date)';
   }
 
   Map<String, dynamic> toMap() {
@@ -61,5 +54,28 @@ class Phase {
       isChecked: isChecked ?? this.isChecked,
       date: date ?? this.date,
     );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is Phase &&
+        other.title == title &&
+        other.description == description &&
+        other.phaseHint == phaseHint &&
+        other.descriptionHint == descriptionHint &&
+        other.isChecked == isChecked &&
+        other.date == date;
+  }
+
+  @override
+  int get hashCode {
+    return title.hashCode ^
+        description.hashCode ^
+        phaseHint.hashCode ^
+        descriptionHint.hashCode ^
+        isChecked.hashCode ^
+        date.hashCode;
   }
 }

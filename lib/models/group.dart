@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:reach_research/models/benefit.dart';
+
 import 'enroled_to.dart';
 
 class Group {
@@ -34,16 +36,19 @@ class Group {
   String toJson() => json.encode(toMap());
 
   @override
-  String toString() {
-    print('Group(groupName: $groupName, groupId: $groupId,} })})');
-
-    print("participants: ");
-    participants.forEach(print);
-    return "";
-  }
+  String toString() => 'Group(groupName: $groupName, groupId: $groupId,} })})';
 
   Group copyWith(String groupName) {
     return Group(
         groupName: groupName, participants: participants, groupId: groupId);
   }
+
+  int getParticipantIndex(String participantId) => participants.indexWhere(
+      (element) => element.participant.participantId == participantId);
+
+  void removeBenefit(int partIndex, String benefitName) =>
+      participants[partIndex].removeBenefit(benefitName);
+
+  void addBenefit(int partIndex, Benefit benefitToInsert) =>
+      participants[partIndex].benefits.add(benefitToInsert);
 }

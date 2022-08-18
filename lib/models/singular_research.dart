@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
@@ -5,7 +6,7 @@ class SingularResearch extends Research {
   final List<EnrolledTo> enrollments;
 
   SingularResearch(
-      {this.enrollments = const [],
+      {required this.enrollments,
       researchId,
       state,
       title = '',
@@ -21,15 +22,13 @@ class SingularResearch extends Research {
       preferredTimes,
       preferredMethods,
       enrolledIds,
-      city,
+      city = "",
       criteria,
       List<Phase> phases = const [],
       researcher,
       category = '',
-      rejectedIds,
-      isGroupResearch,
-      languageCode,
-      locale,
+      rejectedIds = const [],
+      isGroupResearch = false,
       bool isRequestingParticipants = false,
       int requestedParticipantsNumber = 0,
       int requestJoiners = 0,
@@ -62,6 +61,37 @@ class SingularResearch extends Research {
             requestJoiners: requestJoiners,
             startDate: startDate);
 
+  void addUniqueBenefit(EnrolledTo enrollment, Benefit benefitToInsert) {
+    bool alreadyInserted = false;
+
+    for (final benefit in enrollment.benefits) {
+      if (benefit.benefitName == benefitToInsert.benefitName) {
+        alreadyInserted = true;
+      }
+    }
+    int partIndex = getParticipantIndex(
+      enrollment.participant.participantId,
+    );
+    if (alreadyInserted) {
+      removeBenefit(
+        partIndex,
+        benefitToInsert.benefitName,
+      );
+    }
+
+    enrollments[partIndex].benefits.add(benefitToInsert);
+  }
+
+  List<Participant> getParticipants() =>
+      [for (final e in enrollments) e.participant];
+
+  int getParticipantIndex(String participantId) => enrollments
+      .indexWhere((e) => e.participant.participantId == participantId);
+
+  void removeBenefit(int index, String benefitName) => enrollments[index]
+      .benefits
+      .removeWhere((b) => b.benefitName == benefitName);
+
   @override
   toMap() {
     Map data = super.toMap();
@@ -79,10 +109,11 @@ class SingularResearch extends Research {
   factory SingularResearch.fromFirestore(Map<String, dynamic> researchData) {
     Map<String, Criterion> criteria = {};
 
-    if (researchData['criteria'] != null)
+    if (researchData['criteria'] != null) {
       for (String key in researchData['criteria'].keys) {
         criteria[key] = criterionFromMap(researchData['criteria'][key]);
       }
+    }
 
     return SingularResearch(
       enrollments: (researchData["enrollments"] as List)
@@ -154,36 +185,6 @@ class SingularResearch extends Research {
         isGroupResearch: false,
       );
 
-  void addUniqueBenefit(EnrolledTo enrollment, Benefit benefit) {
-    bool alreadyInserted = false;
-
-    for (var b in enrollment.benefits) {
-      if (b.benefitName == benefit.benefitName) alreadyInserted = true;
-    }
-    int currentEnrollmentIndex = enrollments.indexWhere((e) =>
-        e.participant.participantId == enrollment.participant.participantId);
-    if (alreadyInserted) {
-      enrollments[currentEnrollmentIndex]
-          .benefits
-          .removeWhere((b) => b.benefitName == benefit.benefitName);
-    }
-
-    enrollments[currentEnrollmentIndex].benefits.add(benefit);
-  }
-
-  void addUnifiedBenefit(Benefit benefit) => enrollments.forEach((enrollment) {
-        bool alreadyInserted = false;
-        for (var b in enrollment.benefits) {
-          if (b.benefitName == benefit.benefitName) alreadyInserted = true;
-        }
-
-        if (alreadyInserted) {
-          enrollment.benefits
-              .removeWhere((b) => b.benefitName == benefit.benefitName);
-        }
-        enrollment.benefits.add(benefit);
-      });
-
   SingularResearch copyWith2({
     List<EnrolledTo>? enrollments,
     Researcher? researcher,
@@ -214,36 +215,50 @@ class SingularResearch extends Research {
     int? requestJoiners,
     bool? isRequestingParticipants,
     int? requestedParticipantsNumber,
-  }) {
-    return SingularResearch(
-        enrollments: enrollments ?? this.enrollments,
-        researcher: researcher ?? this.researcher,
-        researchId: researchId ?? this.researchId,
-        state: state ?? this.state,
-        title: title ?? this.title,
-        desc: desc ?? this.desc,
-        category: category ?? this.category,
-        criteria: criteria ?? this.criteria,
-        questions: questions ?? this.questions,
-        benefits: benefits ?? this.benefits,
-        sampleSize: sampleSize ?? this.sampleSize,
-        numberOfMeetings: numberOfMeetings ?? this.numberOfMeetings,
-        preferredTimes: prefferedTimes ?? preferredTimes,
-        preferredDays: prefferedDays ?? preferredDays,
-        preferredMethods: prefferedMethods ?? preferredMethods,
-        startDate: startDate ?? this.startDate,
-        meetings: meetings ?? this.meetings,
-        city: city ?? this.city,
-        image: image ?? this.image,
-        numberOfEnrolled: numberOfEnrolled ?? this.numberOfEnrolled,
-        phases: phases ?? this.phases,
-        enrolledIds: enrolledIds ?? this.enrolledIds,
-        rejectedIds: rejectedIds ?? this.rejectedIds,
-        isGroupResearch: isGroupResearch ?? this.isGroupResearch,
-        requestJoiners: requestJoiners ?? this.requestJoiners,
-        requestedParticipantsNumber:
-            requestedParticipantsNumber ?? this.requestedParticipantsNumber,
-        isRequestingParticipants:
-            isRequestingParticipants ?? this.isRequestingParticipants);
+  }) =>
+      SingularResearch(
+          enrollments: enrollments ?? this.enrollments,
+          researcher: researcher ?? this.researcher,
+          researchId: researchId ?? this.researchId,
+          state: state ?? this.state,
+          title: title ?? this.title,
+          desc: desc ?? this.desc,
+          category: category ?? this.category,
+          criteria: criteria ?? this.criteria,
+          questions: questions ?? this.questions,
+          benefits: benefits ?? this.benefits,
+          sampleSize: sampleSize ?? this.sampleSize,
+          numberOfMeetings: numberOfMeetings ?? this.numberOfMeetings,
+          preferredTimes: prefferedTimes ?? preferredTimes,
+          preferredDays: prefferedDays ?? preferredDays,
+          preferredMethods: prefferedMethods ?? preferredMethods,
+          startDate: startDate ?? this.startDate,
+          meetings: meetings ?? this.meetings,
+          city: city ?? this.city,
+          image: image ?? this.image,
+          numberOfEnrolled: numberOfEnrolled ?? this.numberOfEnrolled,
+          phases: phases ?? this.phases,
+          enrolledIds: enrolledIds ?? this.enrolledIds,
+          rejectedIds: rejectedIds ?? this.rejectedIds,
+          isGroupResearch: isGroupResearch ?? this.isGroupResearch,
+          requestJoiners: requestJoiners ?? this.requestJoiners,
+          requestedParticipantsNumber:
+              requestedParticipantsNumber ?? this.requestedParticipantsNumber,
+          isRequestingParticipants:
+              isRequestingParticipants ?? this.isRequestingParticipants);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is SingularResearch &&
+        listEquals(other.enrollments, enrollments);
   }
+
+  @override
+  int get hashCode => enrollments.hashCode;
+
+  @override
+  String toString() =>
+      '${super.toString()} SingularResearch(enrollments: $enrollments)';
 }

@@ -34,7 +34,7 @@ class RangeCriterion extends Criterion {
   }
 
   @override
-  String toString() => 'RangeCriteria(from: $from, to: $to)';
+  String toString() => '(from: $from, to: $to)';
 
   @override
   bool operator ==(Object other) {

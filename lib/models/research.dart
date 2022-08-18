@@ -1,17 +1,15 @@
 import 'dart:core';
-import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
 enum ResearchState { Upcoming, Ongoing, Redeeming, Done }
 
-//TODO Create empty constructor
-
 class Research {
   final Researcher researcher;
 
-  String? researchId;
+  final String researchId;
   final ResearchState state;
 
   final String title;
@@ -81,53 +79,6 @@ class Research {
     this.requestJoiners = 0,
   });
 
-  factory Research.fromFirestore(Map researchData) {
-    Map<String, Criterion> criteria = {};
-
-    for (String key in researchData['criteria'].keys) {
-      criteria[key] = criterionFromMap(researchData['criteria'][key]);
-    }
-
-    return Research(
-      researchId: researchData['researchId'] ?? '',
-      isGroupResearch: researchData["isGroupResearch"] ?? false,
-      researcher: Researcher.fromFirestore(researchData["researcher"] ?? {}),
-      state: ResearchState.values[researchData['state'] ?? 0],
-      title: researchData["title"] ?? '',
-      desc: researchData["desc"] ?? '',
-      category: researchData['category'] ?? '',
-      criteria: criteria,
-      questions: (researchData['questions'] as List)
-          .map((v) => Question.fromFirestore(v))
-          .toList(),
-      benefits: (researchData['benefits'] as List)
-          .map((v) => Benefit.fromMap(v))
-          .toList(),
-      meetings: (researchData['meetings'] as List)
-          .map((v) => Meeting.fromFirestore(v))
-          .toList(),
-      city: researchData['city'] ?? '',
-      numberOfMeetings: researchData['numberOfMeetings'] ?? 0,
-      preferredDays: researchData['prefferedDays'] ?? [],
-      preferredTimes: researchData['prefferedTimes'] ?? [],
-      preferredMethods: researchData['prefferedMethods'] ?? [],
-      startDate: researchData["startDate"] ?? "2021-10-10",
-      image: researchData['image'] ?? 'f&b4.jpg',
-      sampleSize: researchData["sampleSize"] ?? 1,
-      numberOfEnrolled: researchData['numberOfEnrolled'] ?? 0,
-      phases: (researchData['phases'] as List)
-          .map((v) => Phase.fromFirestore(v))
-          .toList(),
-      enrolledIds: (researchData["enrolledIds"] as List),
-      rejectedIds: (researchData["rejectedIds"] as List),
-      isRequestingParticipants:
-          researchData["isRequestingParticipants"] ?? false,
-      requestedParticipantsNumber:
-          researchData["requestedParticipantsNumber"] ?? 0,
-      requestJoiners: researchData["requestJoiners"] ?? 0,
-    );
-  }
-
   bool get isNotFull => sampleSize != numberOfEnrolled;
 
   void rejectParticipant(String participantId) async =>
@@ -155,7 +106,7 @@ class Research {
 
 //for master doc
   toMap() => {
-        'researchId': researchId ?? "",
+        'researchId': researchId,
         "isGroupResearch": isGroupResearch,
         'state': state.index,
         'title': title,
@@ -184,21 +135,14 @@ class Research {
         "requestJoiners": requestJoiners,
       };
 
-  String getImage(String category) {
-    Random rnd = Random();
-    int min = 1;
-    int max = 7;
-
-    int number = min + rnd.nextInt(max - min);
-
-    return '$category${number.toString()}.webp';
-  }
-
   bool scheduleIsNotEmpty() =>
       preferredDays.isNotEmpty &&
       preferredTimes.isNotEmpty &&
       preferredMethods.isNotEmpty &&
       startDate != DateTime.now().toString().substring(0, 10);
+
+  bool enrolledIdsContains(String participantId) =>
+      enrolledIds.contains(participantId);
 
   Research copyWith({
     Researcher? researcher,
@@ -259,20 +203,121 @@ class Research {
       requestJoiners: requestJoiners ?? this.requestJoiners,
     );
   }
+
+  factory Research.empty() => Research(
+      researchId: "",
+      researcher: Researcher.empty(),
+      state: ResearchState.Upcoming,
+      title: "",
+      isGroupResearch: false,
+      desc: "",
+      category: "",
+      criteria: {},
+      questions: [],
+      benefits: [],
+      meetings: [],
+      numberOfEnrolled: 0,
+      numberOfMeetings: 0,
+      city: "",
+      preferredDays: [],
+      preferredTimes: [],
+      preferredMethods: [],
+      startDate: DateTime.now().toString().substring(0, 10),
+      phases: [],
+      enrolledIds: [],
+      sampleSize: 0,
+      rejectedIds: []);
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is Research &&
+        other.researcher == researcher &&
+        other.researchId == researchId &&
+        other.state == state &&
+        other.title == title &&
+        other.desc == desc &&
+        other.category == category &&
+        mapEquals(other.criteria, criteria) &&
+        listEquals(other.questions, questions) &&
+        listEquals(other.benefits, benefits) &&
+        other.sampleSize == sampleSize &&
+        other.numberOfMeetings == numberOfMeetings &&
+        listEquals(other.preferredTimes, preferredTimes) &&
+        listEquals(other.preferredDays, preferredDays) &&
+        listEquals(other.preferredMethods, preferredMethods) &&
+        other.startDate == startDate &&
+        listEquals(other.meetings, meetings) &&
+        other.city == city &&
+        other.image == image &&
+        other.numberOfEnrolled == numberOfEnrolled &&
+        listEquals(other.phases, phases) &&
+        listEquals(other.enrolledIds, enrolledIds) &&
+        listEquals(other.rejectedIds, rejectedIds) &&
+        other.isGroupResearch == isGroupResearch &&
+        other.isRequestingParticipants == isRequestingParticipants &&
+        other.requestedParticipantsNumber == requestedParticipantsNumber &&
+        other.requestJoiners == requestJoiners;
+  }
+
+  @override
+  int get hashCode {
+    return researcher.hashCode ^
+        researchId.hashCode ^
+        state.hashCode ^
+        title.hashCode ^
+        desc.hashCode ^
+        category.hashCode ^
+        criteria.hashCode ^
+        questions.hashCode ^
+        benefits.hashCode ^
+        sampleSize.hashCode ^
+        numberOfMeetings.hashCode ^
+        preferredTimes.hashCode ^
+        preferredDays.hashCode ^
+        preferredMethods.hashCode ^
+        startDate.hashCode ^
+        meetings.hashCode ^
+        city.hashCode ^
+        image.hashCode ^
+        numberOfEnrolled.hashCode ^
+        phases.hashCode ^
+        enrolledIds.hashCode ^
+        rejectedIds.hashCode ^
+        isGroupResearch.hashCode ^
+        isRequestingParticipants.hashCode ^
+        requestedParticipantsNumber.hashCode ^
+        requestJoiners.hashCode;
+  }
+
+  @override
+  String toString() {
+    return 'Research(researcher: $researcher, researchId: $researchId, state: $state, title: $title, desc: $desc, category: $category, criteria: $criteria, questions: $questions, benefits: $benefits, sampleSize: $sampleSize, numberOfMeetings: $numberOfMeetings, preferredTimes: $preferredTimes, preferredDays: $preferredDays, preferredMethods: $preferredMethods, startDate: $startDate, meetings: $meetings, city: $city, image: $image, numberOfEnrolled: $numberOfEnrolled, phases: $phases, enrolledIds: $enrolledIds, rejectedIds: $rejectedIds, isGroupResearch: $isGroupResearch, isRequestingParticipants: $isRequestingParticipants, requestedParticipantsNumber: $requestedParticipantsNumber, requestJoiners: $requestJoiners)';
+  }
 }
 
-abstract class BaseOngoingResearch {
+abstract class BaseResearch {
   Future<void> togglePhase(int index);
   Future<void> addMeeting(Meeting meeting);
+  Future<void> stopRequest();
+  Future<void> editRequest(int newNumber);
+  Future<void> addParticipant(Participant participant);
+  Future<void> addPhases(List<Phase> phases);
+
   Future<void> addEmptyGroup();
-  Future<void> deleteMeeting(Meeting meeting);
+  void addUniqueBenefit(Benefit benefit, EnrolledTo enrollment);
+  void addUnifiedBenefit(Benefit benefit);
+  Future<void> removeMeeting(Meeting meeting);
   Future<void> editMeeting(int index, Meeting meeting);
   Future<void> requestParticipants(int number);
   Future<void> kickParticipant(String participantId);
-  Future<void> changeParticipantGroup(
-      {required int participantIndex,
-      required int prevIndex,
-      required int newIndex});
-  Future<void> changeGroupName(int groupIndex, String newName);
-  Future<void> deleteGroup(int groupIndex);
+
+  Future<void> changeParticipantGroup({
+    required int participantIndex,
+    required int fromIndex,
+    required int toIndex,
+  });
+
+  Future<void> removeGroup(int groupIndex);
 }

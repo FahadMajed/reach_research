@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
@@ -6,37 +7,37 @@ class GroupResearch extends Research {
   final int groupSize;
   final List<Group> groups;
 
-  GroupResearch(
-      {required this.numberOfGroups,
-      required this.groupSize,
-      this.groups = const [],
-      researchId,
-      required ResearchState state,
-      title = "",
-      desc = "",
-      required image,
-      required questions,
-      required numberOfEnrolled,
-      required sampleSize,
-      benefits = const [],
-      List<Meeting> meetings = const [],
-      required numberOfMeetings,
-      preferredDays = const [],
-      preferredTimes = const [],
-      preferredMethods = const [],
-      enrolledIds = const [],
-      requestJoiners = 0,
-      isGroupResearch = true,
-      city = "",
-      required criteria,
-      List<Phase> phases = const [],
-      required researcher,
-      category = '',
-      rejectedIds = const [],
-      isRequestingParticipants = false,
-      requestedParticipantsNumber = 0,
-      required startDate})
-      : super(
+  GroupResearch({
+    required this.numberOfGroups,
+    required this.groupSize,
+    this.groups = const [],
+    required String researchId,
+    required ResearchState state,
+    title = "",
+    desc = "",
+    required image,
+    required questions,
+    required numberOfEnrolled,
+    required sampleSize,
+    benefits = const [],
+    List<Meeting> meetings = const [],
+    required numberOfMeetings,
+    preferredDays = const [],
+    preferredTimes = const [],
+    preferredMethods = const [],
+    enrolledIds = const [],
+    requestJoiners = 0,
+    isGroupResearch = true,
+    city = "",
+    required criteria,
+    List<Phase> phases = const [],
+    required researcher,
+    category = '',
+    rejectedIds = const [],
+    isRequestingParticipants = false,
+    requestedParticipantsNumber = 0,
+    required startDate,
+  }) : super(
             researchId: researchId,
             state: state,
             title: title,
@@ -73,6 +74,60 @@ class GroupResearch extends Research {
     data['groups'] = groups.map((g) => g.toMap()).toList();
 
     return data;
+  }
+
+  void addUniqueBenefit(EnrolledTo enrollment, Benefit benefitToInsert) {
+    for (final group in groups) {
+      bool alreadyInserted = false;
+
+      for (var benefit in enrollment.benefits) {
+        benefit.benefitName == benefitToInsert.benefitName
+            ? alreadyInserted = true
+            : null;
+      }
+      int partIndex =
+          group.getParticipantIndex(enrollment.participant.participantId);
+
+      if (partIndex != -1) {
+        if (alreadyInserted) {
+          group.removeBenefit(partIndex, benefitToInsert.benefitName);
+        }
+
+        group.addBenefit(partIndex, benefitToInsert);
+      }
+    }
+  }
+
+  List<EnrolledTo> getAllEnrollments() => [
+        for (final g in groups)
+          for (final enrollment in g.participants) enrollment
+      ];
+
+  List<Participant> getAllParticipants() => [
+        for (final g in groups)
+          for (final enrollment in g.participants) enrollment.participant
+      ];
+
+  List<Participant> getAllParticipantsAt(int groupIndex) => [
+        for (final enrollment in groups[groupIndex].participants)
+          enrollment.participant
+      ];
+
+  void addUnifiedBenefit(Benefit benefitToInsert) {
+    for (final enrollment in getAllEnrollments()) {
+      bool alreadyInserted = false;
+      for (final benefit in enrollment.benefits) {
+        if (benefit.benefitName == benefitToInsert.benefitName) {
+          alreadyInserted = true;
+        }
+      }
+
+      if (alreadyInserted) {
+        enrollment.removeBenefit(benefitToInsert.benefitName);
+      }
+
+      enrollment.benefits.add(benefitToInsert);
+    }
   }
 
   @override
@@ -169,55 +224,6 @@ class GroupResearch extends Research {
         isGroupResearch: true,
       );
 
-  bool changeParticipantGroup(
-      int participantIndex, int prevGroupIndex, int newGroupIndex) {
-    EnrolledTo participantToChange =
-        groups[prevGroupIndex].participants[participantIndex];
-    groups[prevGroupIndex].participants.remove(participantToChange);
-    groups[newGroupIndex].participants.add(participantToChange);
-
-    return true;
-  }
-
-  void addUniqueBenefit(EnrolledTo enrollment, Benefit benefit) =>
-      groups.forEach((group) {
-        bool alreadyInserted = false;
-
-        for (var b in enrollment.benefits) {
-          b.benefitName == benefit.benefitName ? alreadyInserted = true : null;
-        }
-        int currentEnrollmentIndex = group.participants.indexWhere((e) =>
-            e.participant.participantId ==
-            enrollment.participant.participantId);
-        if (currentEnrollmentIndex != -1) {
-          if (alreadyInserted) {
-            group.participants[currentEnrollmentIndex].benefits
-                .removeWhere((b) => b.benefitName == benefit.benefitName);
-          }
-
-          group.participants[currentEnrollmentIndex].benefits.add(benefit);
-        }
-      });
-
-  void addUnifiedBenefit(Benefit benefit) => groups.forEach(
-        (group) => group.participants.forEach(
-          (enrollment) {
-            bool alreadyInserted = false;
-            for (var b in enrollment.benefits) {
-              if (b.benefitName == benefit.benefitName) {
-                alreadyInserted = true;
-              }
-            }
-            if (alreadyInserted) {
-              enrollment.benefits
-                  .removeWhere((b) => b.benefitName == benefit.benefitName);
-            }
-
-            enrollment.benefits.add(benefit);
-          },
-        ),
-      );
-
   GroupResearch copyWith2(
       {int? numberOfGroups,
       int? groupSize,
@@ -228,7 +234,6 @@ class GroupResearch extends Research {
       String? title,
       String? desc,
       String? category,
-      String? languageCode,
       Map<String, Criterion>? criteria,
       List<Question>? questions,
       List<Benefit>? benefits,
@@ -285,4 +290,76 @@ class GroupResearch extends Research {
   }
 
   String getFirstNonFullGroupId() => "";
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is GroupResearch &&
+        other.researcher == researcher &&
+        other.researchId == researchId &&
+        other.state == state &&
+        other.title == title &&
+        other.desc == desc &&
+        other.category == category &&
+        mapEquals(other.criteria, criteria) &&
+        listEquals(other.questions, questions) &&
+        listEquals(other.benefits, benefits) &&
+        other.sampleSize == sampleSize &&
+        other.numberOfMeetings == numberOfMeetings &&
+        listEquals(other.preferredTimes, preferredTimes) &&
+        listEquals(other.preferredDays, preferredDays) &&
+        listEquals(other.preferredMethods, preferredMethods) &&
+        other.startDate == startDate &&
+        listEquals(other.meetings, meetings) &&
+        other.city == city &&
+        other.image == image &&
+        other.numberOfEnrolled == numberOfEnrolled &&
+        listEquals(other.phases, phases) &&
+        listEquals(other.enrolledIds, enrolledIds) &&
+        listEquals(other.rejectedIds, rejectedIds) &&
+        other.isGroupResearch == isGroupResearch &&
+        other.isRequestingParticipants == isRequestingParticipants &&
+        other.requestedParticipantsNumber == requestedParticipantsNumber &&
+        other.requestJoiners == requestJoiners &&
+        other.numberOfGroups == numberOfGroups &&
+        other.groupSize == groupSize &&
+        listEquals(other.groups, groups);
+  }
+
+  @override
+  int get hashCode =>
+      numberOfGroups.hashCode ^
+      groupSize.hashCode ^
+      groups.hashCode ^
+      researcher.hashCode ^
+      researchId.hashCode ^
+      state.hashCode ^
+      title.hashCode ^
+      desc.hashCode ^
+      category.hashCode ^
+      criteria.hashCode ^
+      questions.hashCode ^
+      benefits.hashCode ^
+      sampleSize.hashCode ^
+      numberOfMeetings.hashCode ^
+      preferredTimes.hashCode ^
+      preferredDays.hashCode ^
+      preferredMethods.hashCode ^
+      startDate.hashCode ^
+      meetings.hashCode ^
+      city.hashCode ^
+      image.hashCode ^
+      numberOfEnrolled.hashCode ^
+      phases.hashCode ^
+      enrolledIds.hashCode ^
+      rejectedIds.hashCode ^
+      isGroupResearch.hashCode ^
+      isRequestingParticipants.hashCode ^
+      requestedParticipantsNumber.hashCode ^
+      requestJoiners.hashCode;
+
+  @override
+  String toString() =>
+      '${super.toString()} GroupResearch(numberOfGroups: $numberOfGroups, groupSize: $groupSize, groups: $groups)';
 }

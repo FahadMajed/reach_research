@@ -1,109 +1,99 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+// ignore_for_file: avoid_function_literals_in_foreach_calls
+
+import 'package:reach_auth/providers/providers.dart';
 import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
+final researchsPvdr =
+    StateNotifierProvider<ResearchListNotifier, AsyncValue<List<Research>>>(
+  (ref) {
+    final userId = ref.watch(userPvdr).value?.uid ?? "";
+
+    return ResearchListNotifier(
+      userId,
+      ref.read(
+        researchsRepoPvdr,
+      ),
+    );
+  },
+);
+
 class ResearchListNotifier extends StateNotifier<AsyncValue<List<Research>>> {
   final String uid;
-  late final ResearchsRepository repository;
-  late final Reader read;
+  final ResearchsRepository repository;
+
   ResearchListNotifier(
-    this.read,
     this.uid,
+    this.repository,
   ) : super(const AsyncValue.loading()) {
-    repository = read(researchsRepoPvdr);
     if (uid.isNotEmpty) {
       getAllResearchs();
+    } else {
+      const AsyncData([]);
     }
   }
 
-  Future<void> getAllResearchs({isRefreshing = false}) async {
+  Future<List<Research>> getAllResearchs({isRefreshing = false}) async {
     if (isRefreshing) state = const AsyncValue.loading();
+
     final researchs = await repository.getDocuments(uid);
 
     if (mounted) state = AsyncValue.data(researchs);
+    return state.value!;
   }
 
-  Future<void> updateResearch({required Research updatedResearch}) async {
-    await repository.updateDocument(updatedResearch);
-
-    if (mounted) {
-      state.whenData(
-        (researchs) => state = AsyncValue.data(
-          [
-            for (final research in researchs)
-              if (research.researchId == updatedResearch.researchId)
-                updatedResearch
-              else
-                research,
-          ],
-        ),
-      );
-    }
-  }
-
-  void retainWhereMatched(Participant participant) {
-    if (state.value != null) {
-      state.value!
-          .retainWhere((research) => participant.isMatched(research.criteria));
-    }
-  }
+  // void retainWhereMatched(
+  //   bool Function(Map<String, Criterion> criteria) isMatched,
+  // ) {
+  //   if (state.value != null) {
+  //     state.value!.retainWhere((research) => isMatched(research.criteria));
+  //   }
+  // }
 
   Research getResearch(String researchId) =>
       state.value!.firstWhere((e) => e.researchId == researchId);
-
-  addParticipant(
-      {required Research research, required Participant participant}) {}
-
-  rejectParticipant(
-      {required Research research, required String participantId}) {}
 
   Research? getResearchById(String id) => state
       .whenData((researchs) => researchs.firstWhere((r) => r.researchId == id))
       .value;
 
-  Future<String> addResearch({required Research research}) async {
-    final researchId =
-        await repository.createDocument(research).then((r) => r.researchId);
+  Future<bool> addResearch({required Research research}) async {
+    await repository.createDocument(research);
 
-    state.whenData((researchs) => state = AsyncValue.data(
-        researchs..add(copyResearchWith(research, researchId: researchId))));
+    state = AsyncValue.data(state.value!..add(copyResearchWith(research)));
 
-    return researchId ?? "";
+    return true;
   }
 
   Future<void> updateResearcher({required Researcher researcher}) async {
-    getAllResearchs().then(
-      (value) {
-        final researchs = state.value;
-
-        for (final research in researchs!) {
+    List<Research> researchsState = [];
+    await getAllResearchs().then(
+      (researchs) {
+        for (final research in researchs) {
           repository.updateField(
-              research.researchId!, "researcher", researcher);
+            research.researchId,
+            "researcher",
+            researcher,
+          );
+          researchsState.add(copyResearchWith(
+            research,
+            researcher: researcher,
+          ));
         }
       },
     );
-  }
-
-  Future<void> requestMoreParticipants(
-      Research research, int requestedParticipantsNumber) async {
-    await updateResearch(
-      updatedResearch: copyResearchWith(research,
-          requestedParticipantsNumber: requestedParticipantsNumber,
-          requestJoiners: 0,
-          isRequestingParticipants: true),
-    );
+    state = AsyncData(researchsState);
   }
 
   void clear() {
     final researchs = state.value;
     for (final research in researchs!) {
-      repository.deleteDocument(research.researchId!);
+      repository.deleteDocument(research.researchId);
     }
-    state.value!.clear();
+    state = const AsyncData([]);
   }
 
-  void updateResearchState() {
-    final ongoingResearch = read(ongoingResearchPvdr);
+  void updateResearchState(Research ongoingResearch) {
     state = AsyncValue.data(
       [
         for (final research in state.value ?? [])

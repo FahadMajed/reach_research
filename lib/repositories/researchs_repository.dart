@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
@@ -8,20 +6,19 @@ final researchsRepoPvdr = Provider(
 );
 
 class ResearchsRepository implements DatabaseRepository<Research> {
-  final FirebaseFirestore _database;
-  late CollectionReference<Research> collection;
+  late final FirebaseFirestore _database;
 
-  ResearchsRepository(
-    this._database,
-  ) {
-    collection = _database.collection("researchs").withConverter<Research>(
+  late final CollectionReference<Research> _collection;
+
+  ResearchsRepository(this._database) {
+    _collection = _database.collection("researchs").withConverter<Research>(
           fromFirestore: (snapshot, _) => researchFromMap(snapshot.data()!),
           toFirestore: (research, _) => researchToMap(research),
         );
   }
 
   Future<List<Research>> getEnrolledToResearchs(String participantId) async =>
-      collection
+      _collection
           .where("enrolledIds", arrayContains: participantId)
           .where("state", whereIn: [
             ResearchState.Ongoing.index,
@@ -31,14 +28,14 @@ class ResearchsRepository implements DatabaseRepository<Research> {
           .get()
           .then((query) => query.docs.map((doc) => doc.data()).toList());
 
-  Stream<Research> streamResearch(String researchId) => collection
+  Stream<Research> streamResearch(String researchId) => _collection
       .doc(researchId)
       .snapshots()
       .map((researchDoc) => researchDoc.data()!);
 
   @override
   Future<Research> getDocument(String id) =>
-      collection.doc(id).get().then((researchDoc) => researchDoc.data()!);
+      _collection.doc(id).get().then((researchDoc) => researchDoc.data()!);
 
   @override
   Future<List<Research>> getDocuments(
@@ -46,7 +43,7 @@ class ResearchsRepository implements DatabaseRepository<Research> {
     bool defaultFlow = true,
   }) async {
     if (defaultFlow) {
-      return collection
+      return _collection
           .where('researcher.researcherId', isEqualTo: id)
           .where('state', whereIn: [
             ResearchState.Ongoing.index,
@@ -58,7 +55,7 @@ class ResearchsRepository implements DatabaseRepository<Research> {
               value.docs.map((researchDoc) => researchDoc.data()).toList());
     }
 
-    List<Research> allUpcomingResearchs = await collection
+    List<Research> allUpcomingResearchs = await _collection
         .where(
           "state",
           isEqualTo: ResearchState.Upcoming.index,
@@ -67,7 +64,7 @@ class ResearchsRepository implements DatabaseRepository<Research> {
         .get()
         .then((query) => query.docs.map((doc) => doc.data()).toList());
 
-    List<Research> requestingParticipantsResearchs = await collection
+    List<Research> requestingParticipantsResearchs = await _collection
         .where(
           "isRequestingParticipants",
           isEqualTo: true,
@@ -80,20 +77,18 @@ class ResearchsRepository implements DatabaseRepository<Research> {
   }
 
   @override
-  Future<void> deleteDocument(id) async => await collection.doc(id).delete();
+  Future<void> deleteDocument(id) async => await _collection.doc(id).delete();
 
   @override
   Future<Research> createDocument(Research research) async {
-    final researchDoc = await collection.add(research);
-    research = copyResearchWith(research, researchId: researchDoc.id);
+    await _collection.doc(research.researchId).set(research);
 
-    await updateDocument(research);
     return research;
   }
 
   @override
   Future<void> updateDocument(Research research) =>
-      collection.doc(research.researchId).update(researchToMap(research));
+      _collection.doc(research.researchId).update(researchToMap(research));
 
   @override
   Future<void> updateFieldArrayRemove(String id, String field, List remove) {
@@ -107,7 +102,7 @@ class ResearchsRepository implements DatabaseRepository<Research> {
 
   @override
   Future<void> updateField(String docId, String field, data) async =>
-      await collection
+      await _collection
           .doc(docId)
           .update({field: (data as Researcher).toPartialMap()});
 }

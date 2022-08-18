@@ -1,10 +1,11 @@
 class ResearchException implements Exception {
-  final message;
+  final String message;
 
   ResearchException(
     this.message,
   );
 
+  @override
   String toString() {
     return message;
   }
@@ -16,4 +17,8 @@ class ResearchIsFull extends ResearchException {
 
 class ResearchRequestIsFull extends ResearchException {
   ResearchRequestIsFull() : super("Research Is Full");
+}
+
+class CannotDeleteAllGroups extends ResearchException {
+  CannotDeleteAllGroups() : super("cannot delete all groups");
 }

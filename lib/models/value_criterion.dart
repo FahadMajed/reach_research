@@ -24,5 +24,15 @@ class ValueCriterion extends Criterion {
   }
 
   @override
-  String toString() => 'RangeCriteria(condition: $condition, name: $name)';
+  String toString() => '(name: $name, condition: $condition)';
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is ValueCriterion && other.condition == condition;
+  }
+
+  @override
+  int get hashCode => condition.hashCode;
 }

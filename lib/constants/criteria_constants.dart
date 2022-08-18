@@ -12,7 +12,7 @@ const List<String> kNationality = [
   'United Arab Emirates'
 ];
 
-Map<String, Criterion> criteriaEmptyStateRanges = {
+final Map<String, Criterion> criteriaEmptyStateRanges = {
   "age": RangeCriterion(
     from: 18,
     to: 85,
@@ -43,7 +43,7 @@ Map<String, Criterion> criteriaEmptyStateRanges = {
   ),
 };
 
-Map<String, Criterion> criteriaDefaultRanges = {
+final Map<String, Criterion> criteriaDefaultRanges = {
   "age": RangeCriterion(
     from: 21,
     to: 42,
@@ -74,7 +74,14 @@ Map<String, Criterion> criteriaDefaultRanges = {
   )
 };
 
-List criteriaMenue = ["age", "height", "weight", "income", "gender", "nation"];
+final List<String> criteriaMenue = [
+  "age",
+  "height",
+  "weight",
+  "income",
+  "gender",
+  "nation"
+];
 
 const Map<String, Icon> criteriaIconsMenue = {
   "age": Icon(

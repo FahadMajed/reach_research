@@ -61,7 +61,8 @@ class Meeting extends ChangeNotifier {
         other.ends == ends &&
         other.isOnline == isOnline &&
         other.link == link &&
-        listEquals(other.inviteesNames, inviteesNames);
+        listEquals(other.inviteesNames, inviteesNames) &&
+        listEquals(other.inviteesIds, inviteesIds);
   }
 
   @override
@@ -71,7 +72,8 @@ class Meeting extends ChangeNotifier {
         ends.hashCode ^
         isOnline.hashCode ^
         link.hashCode ^
-        inviteesNames.hashCode;
+        inviteesNames.hashCode ^
+        inviteesIds.hashCode;
   }
 
   void addInvitee(String inviteeId, String name) {
@@ -107,5 +109,10 @@ class Meeting extends ChangeNotifier {
       inviteesNames: inviteesNames ?? this.inviteesNames,
       inviteesIds: inviteesIds ?? this.inviteesIds,
     );
+  }
+
+  @override
+  String toString() {
+    return 'Meeting(title: $title, starts: $starts, ends: $ends, isOnline: $isOnline, link: $link, inviteesNames: $inviteesNames, inviteesIds: $inviteesIds)';
   }
 }
