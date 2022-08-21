@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:reach_core/core/models/models.dart';
 
 import 'benefit.dart';
@@ -8,7 +7,7 @@ enum EnrollmentStatus { enrolled, rejected, finished }
 class EnrolledTo {
   final Participant participant;
 
-  final String status;
+  final EnrollmentStatus status;
   final List<Benefit> benefits;
   final String groupId;
   final bool redeemed;
@@ -21,10 +20,10 @@ class EnrolledTo {
     required this.participant,
   });
 
-  factory EnrolledTo.fromFirestore(Map enrollmentData) {
+  factory EnrolledTo.fromMap(Map enrollmentData) {
     return EnrolledTo(
         participant: Participant(enrollmentData["participant"] ?? {}),
-        status: enrollmentData['status'] ?? 'rejected',
+        status: EnrollmentStatus.values[enrollmentData['status']],
         benefits: (enrollmentData['benefits'] as List)
             .map((v) => Benefit.fromMap(v))
             .toList(),
@@ -49,28 +48,21 @@ class EnrolledTo {
   }
 
   @override
-  String toString() {
-    return 'EnrolledTo(participant: $participant, status: $status, benefits: $benefits, groupId: $groupId, redeemed: $redeemed)';
-  }
+  String toString() => toMap().toString();
 
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is EnrolledTo &&
-        other.participant == participant &&
-        other.status == status &&
-        listEquals(other.benefits, benefits) &&
-        other.groupId == groupId &&
-        other.redeemed == redeemed;
-  }
-
-  @override
-  int get hashCode {
-    return participant.hashCode ^
-        status.hashCode ^
-        benefits.hashCode ^
-        groupId.hashCode ^
-        redeemed.hashCode;
+  EnrolledTo copyWith({
+    Participant? participant,
+    EnrollmentStatus? status,
+    List<Benefit>? benefits,
+    String? groupId,
+    bool? redeemed,
+  }) {
+    return EnrolledTo(
+      participant: participant ?? this.participant,
+      status: status ?? this.status,
+      benefits: benefits ?? this.benefits,
+      groupId: groupId ?? this.groupId,
+      redeemed: redeemed ?? this.redeemed,
+    );
   }
 }

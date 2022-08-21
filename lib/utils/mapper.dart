@@ -3,8 +3,8 @@ import 'package:reach_research/research.dart';
 
 Research researchFromMap(Map<String, dynamic> data) =>
     data["isGroupResearch"] ?? false
-        ? GroupResearch.fromFirestore(data)
-        : SingularResearch.fromFirestore(data);
+        ? GroupResearch(data)
+        : SingularResearch(data);
 
 Map<String, dynamic> researchToMap(Research research) =>
     research is SingularResearch
@@ -15,7 +15,7 @@ Research copyResearchWith(Research toCopy,
         {List<EnrolledTo>? enrollments,
         Researcher? researcher,
         String? researchId,
-        ResearchState? state,
+        ResearchState? researchState,
         String? title,
         String? desc,
         String? category,
@@ -24,9 +24,9 @@ Research copyResearchWith(Research toCopy,
         List<Benefit>? benefits,
         int? sampleSize,
         int? numberOfMeetings,
-        List? prefferedTimes,
-        List? prefferedDays,
-        List? prefferedMethods,
+        List? meetingsTimeSlots,
+        List? meetingsDays,
+        List? meetingsMethods,
         String? startDate,
         List<Meeting>? meetings,
         String? link,
@@ -44,70 +44,89 @@ Research copyResearchWith(Research toCopy,
         int? requestJoiners,
         List<Group>? groups}) =>
     toCopy is SingularResearch
-        ? toCopy.copyWith2(
-            enrollments: enrollments ?? toCopy.enrollments,
-            researcher: researcher ?? toCopy.researcher,
-            researchId: researchId ?? toCopy.researchId,
-            state: state ?? toCopy.state,
-            requestJoiners: requestJoiners ?? toCopy.requestJoiners,
-            title: title ?? toCopy.title,
-            desc: desc ?? toCopy.desc,
-            category: category ?? toCopy.category,
-            criteria: criteria ?? toCopy.criteria,
-            questions: questions ?? toCopy.questions,
-            benefits: benefits ?? toCopy.benefits,
-            sampleSize: sampleSize ?? toCopy.sampleSize,
-            numberOfMeetings: numberOfMeetings ?? toCopy.numberOfMeetings,
-            prefferedTimes: prefferedTimes ?? toCopy.preferredTimes,
-            prefferedDays: prefferedDays ?? toCopy.preferredDays,
-            prefferedMethods: prefferedMethods ?? toCopy.preferredMethods,
-            startDate: startDate ?? toCopy.startDate,
-            meetings: meetings ?? toCopy.meetings,
-            city: city ?? toCopy.city,
-            image: image ?? toCopy.image,
-            numberOfEnrolled: numberOfEnrolled ?? toCopy.numberOfEnrolled,
-            phases: phases ?? toCopy.phases,
-            isRequestingParticipants:
+        ? toCopy.copyWith({
+            'enrollments': enrollments ?? toCopy.enrollments,
+            'researcher': researcher ?? toCopy.researcher,
+            'researchId': researchId ?? toCopy.researchId,
+            'researchState': researchState ?? toCopy.researchState,
+            'requestJoiners': requestJoiners ?? toCopy.requestJoiners,
+            'title': title ?? toCopy.title,
+            'desc': desc ?? toCopy.desc,
+            'category': category ?? toCopy.category,
+            'criteria': criteria ?? toCopy.criteria,
+            'questions': questions ?? toCopy.questions,
+            'benefits': benefits ?? toCopy.benefits,
+            'sampleSize': sampleSize ?? toCopy.sampleSize,
+            'numberOfMeetings': numberOfMeetings ?? toCopy.numberOfMeetings,
+            'prefferedTimes': meetingsTimeSlots ?? toCopy.meetingsTimeSlots,
+            'prefferedDays': meetingsDays ?? toCopy.meetingsDays,
+            'prefferedMethods': meetingsMethods ?? toCopy.meetingsMethods,
+            'startDate': startDate ?? toCopy.startDate,
+            'meetings': meetings ?? toCopy.meetings,
+            'city': city ?? toCopy.city,
+            'image': image ?? toCopy.image,
+            'numberOfEnrolled': numberOfEnrolled ?? toCopy.numberOfEnrolled,
+            'phases': phases ?? toCopy.phases,
+            'isRequestingParticipants':
                 isRequestingParticipants ?? toCopy.isRequestingParticipants,
-            requestedParticipantsNumber: requestedParticipantsNumber ??
+            'requestedParticipantsNumber': requestedParticipantsNumber ??
                 toCopy.requestedParticipantsNumber,
-            enrolledIds: enrolledIds ?? toCopy.enrolledIds,
-            rejectedIds: rejectedIds ?? toCopy.rejectedIds,
-            isGroupResearch: isGroupResearch ?? toCopy.isGroupResearch,
-          )
-        : (toCopy as GroupResearch).copyWith2(
-            numberOfGroups: numberOfGroups ?? (toCopy).numberOfGroups,
-            groupSize: groupSize ?? (toCopy).groupSize,
-            groups: groups ?? (toCopy).groups,
-            researcher: researcher ?? toCopy.researcher,
-            researchId: researchId ?? toCopy.researchId,
-            state: state ?? toCopy.state,
-            title: title ?? toCopy.title,
-            desc: desc ?? toCopy.desc,
-            requestJoiners: requestJoiners ?? toCopy.requestJoiners,
-            category: category ?? toCopy.category,
-            criteria: criteria ?? toCopy.criteria,
-            questions: questions ?? toCopy.questions,
-            benefits: benefits ?? toCopy.benefits,
-            sampleSize: sampleSize ?? toCopy.sampleSize,
-            numberOfMeetings: numberOfMeetings ?? toCopy.numberOfMeetings,
-            prefferedTimes: prefferedTimes ?? toCopy.preferredTimes,
-            prefferedDays: prefferedDays ?? toCopy.preferredDays,
-            prefferedMethods: prefferedMethods ?? toCopy.preferredMethods,
-            startDate: startDate ?? toCopy.startDate,
-            meetings: meetings ?? toCopy.meetings,
-            city: city ?? toCopy.city,
-            isRequestingParticipants:
-                isRequestingParticipants ?? toCopy.isRequestingParticipants,
-            requestedParticipantsNumber: requestedParticipantsNumber ??
-                toCopy.requestedParticipantsNumber,
-            image: image ?? toCopy.image,
-            numberOfEnrolled: numberOfEnrolled ?? toCopy.numberOfEnrolled,
-            phases: phases ?? toCopy.phases,
-            enrolledIds: enrolledIds ?? toCopy.enrolledIds,
-            rejectedIds: rejectedIds ?? toCopy.rejectedIds,
-            isGroupResearch: isGroupResearch ?? toCopy.isGroupResearch,
-          );
+            'enrolledIds': enrolledIds ?? toCopy.enrolledIds,
+            'rejectedIds': rejectedIds ?? toCopy.rejectedIds,
+            'isGroupResearch': isGroupResearch ?? toCopy.isGroupResearch,
+          })
+        : toCopy is GroupResearch
+            ? toCopy.copyWith({
+                'numberOfGroups': numberOfGroups ?? (toCopy).numberOfGroups,
+                'groupSize': groupSize ?? (toCopy).groupSize,
+                'groups': groups ?? (toCopy).groups,
+                'researcher': researcher ?? toCopy.researcher,
+                'researchId': researchId ?? toCopy.researchId,
+                'researchState': researchState ?? toCopy.researchState,
+                'title': title ?? toCopy.title,
+                'desc': desc ?? toCopy.desc,
+                'requestJoiners': requestJoiners ?? toCopy.requestJoiners,
+                'category': category ?? toCopy.category,
+                'criteria': criteria ?? toCopy.criteria,
+                'questions': questions ?? toCopy.questions,
+                'benefits': benefits ?? toCopy.benefits,
+                'sampleSize': sampleSize ?? toCopy.sampleSize,
+                'numberOfMeetings': numberOfMeetings ?? toCopy.numberOfMeetings,
+                'meetingsTimeSlots':
+                    meetingsTimeSlots ?? toCopy.meetingsTimeSlots,
+                'prefferedDays': meetingsDays ?? toCopy.meetingsDays,
+                'meetingsMethods': meetingsMethods ?? toCopy.meetingsMethods,
+                'startDate': startDate ?? toCopy.startDate,
+                'meetings': meetings ?? toCopy.meetings,
+                'city': city ?? toCopy.city,
+                'isRequestingParticipants':
+                    isRequestingParticipants ?? toCopy.isRequestingParticipants,
+                'requestedParticipantsNumber': requestedParticipantsNumber ??
+                    toCopy.requestedParticipantsNumber,
+                'image': image ?? toCopy.image,
+                'numberOfEnrolled': numberOfEnrolled ?? toCopy.numberOfEnrolled,
+                'phases': phases ?? toCopy.phases,
+                'enrolledIds': enrolledIds ?? toCopy.enrolledIds,
+                'rejectedIds': rejectedIds ?? toCopy.rejectedIds,
+                'isGroupResearch': isGroupResearch ?? toCopy.isGroupResearch,
+              })
+            : toCopy.copyWith({
+                'title': title,
+                'desc': desc,
+                'category': category,
+                'criteria': criteria,
+                'questions': questions,
+                'benefits': benefits,
+                'sampleSize': sampleSize,
+                'numberOfMeetings': numberOfMeetings,
+                'meetingsTimeSlots': meetingsTimeSlots,
+                'meetingsDays': meetingsDays,
+                'meetingsMethods': meetingsMethods,
+                'startDate': startDate,
+                'city': city,
+                'image': image,
+                'isGroupResearch': isGroupResearch
+              });
 
 Criterion criterionFromMap(Map<String, dynamic> data) {
   if (data["condition"] == null) {

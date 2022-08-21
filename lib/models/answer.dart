@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class Answer {
   final bool myAnswer;
   final bool actualAnswer;
@@ -26,25 +24,9 @@ class Answer {
     );
   }
 
-  String toJson() => json.encode(toMap());
-
-  factory Answer.fromJson(String source) => Answer.fromMap(json.decode(source));
-
-  @override
-  String toString() =>
-      'Answer(myAnswer: $myAnswer, acctualAnswer: $actualAnswer, question: $question)';
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is Answer &&
-        other.myAnswer == myAnswer &&
-        other.actualAnswer == actualAnswer &&
-        other.question == question;
-  }
-
-  @override
-  int get hashCode =>
-      myAnswer.hashCode ^ actualAnswer.hashCode ^ question.hashCode;
+  factory Answer.empty() => Answer(
+        myAnswer: false,
+        actualAnswer: false,
+        question: "",
+      );
 }

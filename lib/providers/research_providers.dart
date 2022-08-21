@@ -5,9 +5,6 @@ final currentResearchIdPvdr = StateProvider<String>(
   (ref) => "",
 );
 
-final currentResearchPvdr = StateProvider(
-    (ref) => Research(researcher: ref.watch(researcherPvdr).value!));
-
 final enrollmentsPvdr = Provider<List<EnrolledTo>>((ref) {
   final research = ref.watch(researchPvdr);
 
@@ -15,6 +12,6 @@ final enrollmentsPvdr = Provider<List<EnrolledTo>>((ref) {
       ? research.enrollments
       : [
           for (final group in (research as GroupResearch).groups)
-            for (final e in group.participants) e
+            for (final e in group.enrollments) e
         ];
 });

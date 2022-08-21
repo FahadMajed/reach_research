@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:reach_core/core/models/participant.dart';
 import 'package:reach_research/models/benefit.dart';
 
 import 'enroled_to.dart';
@@ -7,11 +8,11 @@ import 'enroled_to.dart';
 class Group {
   final String groupName;
   final String groupId;
-  final List<EnrolledTo> participants;
+  final List<EnrolledTo> enrollments;
 
   Group({
     required this.groupName,
-    required this.participants,
+    required this.enrollments,
     required this.groupId,
   });
 
@@ -19,16 +20,16 @@ class Group {
     return {
       'groupName': groupName,
       'groupId': groupId,
-      'participants': participants.map((x) => x.toMap()).toList(),
+      'enrollments': enrollments.map((x) => x.toMap()).toList(),
     };
   }
 
-  factory Group.fromFirestore(Map<String, dynamic> groupData) {
+  factory Group.fromMap(Map<String, dynamic> groupData) {
     return Group(
       groupName: groupData['groupName'] ?? '',
       groupId: groupData["groupId"] ?? "",
-      participants: (groupData["participants"] as List)
-          .map((v) => EnrolledTo.fromFirestore(v))
+      enrollments: (groupData["participants"] as List)
+          .map((v) => EnrolledTo.fromMap(v))
           .toList(),
     );
   }
@@ -40,15 +41,19 @@ class Group {
 
   Group copyWith(String groupName) {
     return Group(
-        groupName: groupName, participants: participants, groupId: groupId);
+        groupName: groupName, enrollments: enrollments, groupId: groupId);
   }
 
-  int getParticipantIndex(String participantId) => participants.indexWhere(
+  int getParticipantIndex(String participantId) => enrollments.indexWhere(
       (element) => element.participant.participantId == participantId);
 
   void removeBenefit(int partIndex, String benefitName) =>
-      participants[partIndex].removeBenefit(benefitName);
+      enrollments[partIndex].removeBenefit(benefitName);
 
   void addBenefit(int partIndex, Benefit benefitToInsert) =>
-      participants[partIndex].benefits.add(benefitToInsert);
+      enrollments[partIndex].benefits.add(benefitToInsert);
+
+  void updateEnrollment(Participant participant, int index) {
+    enrollments[index] = enrollments[index].copyWith(participant: participant);
+  }
 }

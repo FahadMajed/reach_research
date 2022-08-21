@@ -11,14 +11,25 @@ final researchPvdr = StateNotifierProvider<ResearchNotifier, Research>(
 
 //after creation
 class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
-  final ResearchsRepository repository;
-  ResearchNotifier(this.repository) : super(Research.empty()) {
+  final ResearchsRepository _repository;
+  ResearchNotifier(this._repository) : super(Research.empty()) {
     state = Research.empty();
   }
 
+  Research get research =>
+      state is SingularResearch ? state : state as GroupResearch;
+
+  GroupResearch get groupResearch => state as GroupResearch;
+
+  SingularResearch get singularResearch => state as SingularResearch;
+
   void set(Research research) => state = research;
 
-  Future<void> _updateData() async => await repository.updateDocument(state);
+  Future<void> _updateData() async =>
+      await _repository.updateData(research, research.researchId);
+
+  Future<void> _updateField(String fieldName, dynamic fieldData) async =>
+      await _repository.updateField(research.researchId, fieldName, fieldData);
 
   void _updateState(
           {List<EnrolledTo>? enrollments,
@@ -33,9 +44,9 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
           List<Benefit>? benefits,
           int? sampleSize,
           int? numberOfMeetings,
-          List? prefferedTimes,
-          List? prefferedDays,
-          List? prefferedMethods,
+          List? meetingsTimeSlots,
+          List? meetingsDays,
+          List? meetingsMethods,
           String? startDate,
           List<Meeting>? meetings,
           String? city,
@@ -51,73 +62,39 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
           bool? isRequestingParticipants,
           int? requestJoiners,
           List<Group>? groups}) =>
-      state is SingularResearch
-          ? state = (state as SingularResearch).copyWith2(
-              enrollments:
-                  enrollments ?? (state as SingularResearch).enrollments,
-              researcher: researcher ?? state.researcher,
-              researchId: researchId ?? state.researchId,
-              state: researchState ?? state.state,
-              requestJoiners: requestJoiners ?? state.requestJoiners,
-              title: title ?? state.title,
-              desc: desc ?? state.desc,
-              category: category ?? state.category,
-              criteria: criteria ?? state.criteria,
-              questions: questions ?? state.questions,
-              benefits: benefits ?? state.benefits,
-              sampleSize: sampleSize ?? state.sampleSize,
-              numberOfMeetings: numberOfMeetings ?? state.numberOfMeetings,
-              prefferedTimes: prefferedTimes ?? state.preferredTimes,
-              prefferedDays: prefferedDays ?? state.preferredDays,
-              prefferedMethods: prefferedMethods ?? state.preferredMethods,
-              startDate: startDate ?? state.startDate,
-              meetings: meetings ?? state.meetings,
-              city: city ?? state.city,
-              image: image ?? state.image,
-              numberOfEnrolled: numberOfEnrolled ?? state.numberOfEnrolled,
-              phases: phases ?? state.phases,
-              isRequestingParticipants:
-                  isRequestingParticipants ?? state.isRequestingParticipants,
-              requestedParticipantsNumber: requestedParticipantsNumber ??
-                  state.requestedParticipantsNumber,
-              enrolledIds: enrolledIds ?? state.enrolledIds,
-              rejectedIds: rejectedIds ?? state.rejectedIds,
-              isGroupResearch: isGroupResearch ?? state.isGroupResearch,
-            )
-          : state = (state as GroupResearch).copyWith2(
-              numberOfGroups:
-                  numberOfGroups ?? (state as GroupResearch).numberOfGroups,
-              groupSize: groupSize ?? (state as GroupResearch).groupSize,
-              groups: groups ?? (state as GroupResearch).groups,
-              researcher: researcher ?? state.researcher,
-              researchId: researchId ?? state.researchId,
-              state: researchState ?? state.state,
-              title: title ?? state.title,
-              desc: desc ?? state.desc,
-              requestJoiners: requestJoiners ?? state.requestJoiners,
-              category: category ?? state.category,
-              criteria: criteria ?? state.criteria,
-              questions: questions ?? state.questions,
-              benefits: benefits ?? state.benefits,
-              sampleSize: sampleSize ?? state.sampleSize,
-              numberOfMeetings: numberOfMeetings ?? state.numberOfMeetings,
-              prefferedTimes: prefferedTimes ?? state.preferredTimes,
-              prefferedDays: prefferedDays ?? state.preferredDays,
-              prefferedMethods: prefferedMethods ?? state.preferredMethods,
-              startDate: startDate ?? state.startDate,
-              meetings: meetings ?? state.meetings,
-              city: city ?? state.city,
-              isRequestingParticipants:
-                  isRequestingParticipants ?? state.isRequestingParticipants,
-              requestedParticipantsNumber: requestedParticipantsNumber ??
-                  state.requestedParticipantsNumber,
-              image: image ?? state.image,
-              numberOfEnrolled: numberOfEnrolled ?? state.numberOfEnrolled,
-              phases: phases ?? state.phases,
-              enrolledIds: enrolledIds ?? state.enrolledIds,
-              rejectedIds: rejectedIds ?? state.rejectedIds,
-              isGroupResearch: isGroupResearch ?? state.isGroupResearch,
-            );
+      state = copyResearchWith(
+        state,
+        enrollments: enrollments,
+        numberOfGroups: numberOfGroups,
+        groupSize: groupSize,
+        groups: groups,
+        researcher: researcher,
+        researchId: researchId,
+        researchState: researchState,
+        title: title,
+        desc: desc,
+        requestJoiners: requestJoiners,
+        category: category,
+        criteria: criteria,
+        questions: questions,
+        benefits: benefits,
+        sampleSize: sampleSize,
+        numberOfMeetings: numberOfMeetings,
+        meetingsDays: meetingsDays,
+        meetingsTimeSlots: meetingsTimeSlots,
+        meetingsMethods: meetingsMethods,
+        startDate: startDate,
+        meetings: meetings,
+        city: city,
+        isRequestingParticipants: isRequestingParticipants,
+        requestedParticipantsNumber: requestedParticipantsNumber,
+        image: image,
+        numberOfEnrolled: numberOfEnrolled,
+        phases: phases,
+        enrolledIds: enrolledIds,
+        rejectedIds: rejectedIds,
+        isGroupResearch: isGroupResearch,
+      );
 
   Future<void> updateResearchState(ResearchState newState) async {
     _updateState(
@@ -130,7 +107,7 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
   @override
   Future<void> addPhases(List<Phase> phases) async {
     _updateState(
-      researchState: ResearchState.Ongoing,
+      researchState: ResearchState.ongoing,
       phases: phases,
     );
 
@@ -139,10 +116,10 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
 
   @override
   Future<void> addParticipant(Participant participant) async {
-    if (state.sampleSize == state.numberOfEnrolled) {
+    if (research.sampleSize == research.numberOfEnrolled) {
       throw ResearchIsFull();
     }
-    if (state.isGroupResearch) {
+    if (research.isGroupResearch) {
       _addParticipantToGroup(participant);
     } else {
       _addParticipantToSingle(participant);
@@ -150,10 +127,10 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
 
     _incrementEnrollments(participantId: participant.participantId);
 
-    if (state.isRequestingParticipants) {
+    if (research.isRequestingParticipants) {
       _incrementRequestJoiners();
 
-      if (state.requestedParticipantsNumber == state.requestJoiners) {
+      if (research.requestedParticipantsNumber == research.requestJoiners) {
         stopRequest();
         return;
       }
@@ -163,37 +140,35 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
   }
 
   void _addParticipantToGroup(Participant participant) {
-    final research = state as GroupResearch;
-
-    if (research.groups.isEmpty) {
+    if (groupResearch.groups.isEmpty) {
       final groupId = Formatter.formatGroupId(
         number: 1,
         title: research.title,
       );
-      research.groups.add(
+      groupResearch.groups.add(
         Group(
           groupId: groupId,
           groupName: "Group 1",
-          participants: [
+          enrollments: [
             EnrolledTo(
                 participant: participant,
                 redeemed: false,
                 groupId: groupId,
-                status: "enrolled",
+                status: EnrollmentStatus.enrolled,
                 benefits: []),
           ],
         ),
       );
     } else {
-      for (Group group in research.groups) {
+      for (Group group in groupResearch.groups) {
         String currentGroupName = group.groupName;
         int currentGroupNumber = int.tryParse(currentGroupName.split(" ")[1])!;
 
-        if (group.participants.length < research.groupSize) {
-          group.participants.add(
+        if (group.enrollments.length < groupResearch.groupSize) {
+          group.enrollments.add(
             EnrolledTo(
               participant: participant,
-              status: "enrolled",
+              status: EnrollmentStatus.enrolled,
               redeemed: false,
               groupId: Formatter.formatGroupId(
                 number: currentGroupNumber,
@@ -206,19 +181,19 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
           break;
         } else {
           // check if the last group is the full group, if so add new group
-          if (group == research.groups.last) {
+          if (group == groupResearch.groups.last) {
             final groupId = Formatter.formatGroupId(
               number: currentGroupNumber + 1,
               title: research.title,
             );
-            research.groups.add(
+            groupResearch.groups.add(
               Group(
                 groupName: "Group ${currentGroupNumber + 1}",
-                participants: [
+                enrollments: [
                   EnrolledTo(
                       groupId: groupId,
                       participant: participant,
-                      status: "enrolled",
+                      status: EnrollmentStatus.enrolled,
                       benefits: [],
                       redeemed: false)
                 ],
@@ -233,19 +208,16 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
     }
   }
 
-  void _addParticipantToSingle(Participant participant) {
-    final research = state as SingularResearch;
-
-    research.enrollments.add(
-      EnrolledTo(
-        participant: participant,
-        status: "enrolled",
-        benefits: [],
-        groupId: '',
-        redeemed: false,
-      ),
-    );
-  }
+  void _addParticipantToSingle(Participant participant) =>
+      singularResearch.enrollments.add(
+        EnrolledTo(
+          participant: participant,
+          status: EnrollmentStatus.enrolled,
+          benefits: [],
+          groupId: '',
+          redeemed: false,
+        ),
+      );
 
   @override
   void addUnifiedBenefit(Benefit benefit) {
@@ -276,7 +248,7 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
   }
 
   void _addGroupUnifiedBenefit(Benefit benefit) {
-    final groupResearch = (state as GroupResearch)..addUnifiedBenefit(benefit);
+    final groupResearch = this.groupResearch..addUnifiedBenefit(benefit);
 
     _updateState(groups: groupResearch.groups);
   }
@@ -294,7 +266,7 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
   }
 
   void _addGroupUniqueBenefit(EnrolledTo enrollment, Benefit benefitToInsert) {
-    final groupResearch = (state as GroupResearch)
+    final groupResearch = this.groupResearch
       ..addUniqueBenefit(enrollment, benefitToInsert);
 
     _updateState(groups: groupResearch.groups);
@@ -302,27 +274,27 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
 
   void _addSingularUniqueBenefit(
       EnrolledTo enrollment, Benefit benefitToInsert) {
-    final research = (state as SingularResearch)
+    final singularResearch = this.singularResearch
       ..addUniqueBenefit(enrollment, benefitToInsert);
 
-    _updateState(enrollments: research.enrollments);
+    _updateState(enrollments: singularResearch.enrollments);
   }
 
   @override
   Future<void> addMeeting(Meeting meeting) async {
-    _updateState(meetings: [...state.meetings, meeting]);
+    _updateState(meetings: [...research.meetings, meeting]);
     await _updateData();
   }
 
   @override
   Future<void> removeMeeting(Meeting meeting) async {
-    _updateState(meetings: state.meetings..remove(meeting));
+    _updateState(meetings: research.meetings..remove(meeting));
     await _updateData();
   }
 
   @override
   Future<void> editMeeting(int index, Meeting meeting) async {
-    final meetings = state.meetings;
+    final meetings = research.meetings;
     _updateState(
       meetings: [
         for (final m in meetings)
@@ -337,7 +309,7 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
   Future<void> togglePhase(
     int index,
   ) async {
-    final phases = state.phases;
+    final phases = research.phases;
     _updateState(
       phases: [
         for (final p in phases)
@@ -352,7 +324,6 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
   }
 
   void _changeGroupName(int groupIndex, String newName) async {
-    final groupResearch = (state as GroupResearch);
     final groups = groupResearch.groups;
 
     groups[groupIndex] = groups[groupIndex].copyWith(newName);
@@ -366,21 +337,18 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
     required int fromIndex,
     required int toIndex,
   }) async {
-    final groupResearch = (state as GroupResearch);
     final groups = groupResearch.groups;
 
     EnrolledTo participantToChange =
-        groups[fromIndex].participants[participantIndex];
-    groups[fromIndex].participants.remove(participantToChange);
-    groups[toIndex].participants.add(participantToChange);
+        groups[fromIndex].enrollments[participantIndex];
+    groups[fromIndex].enrollments.remove(participantToChange);
+    groups[toIndex].enrollments.add(participantToChange);
     _updateState(groups: groups);
     await _updateData();
   }
 
   @override
   Future<void> removeGroup(int index) async {
-    GroupResearch groupResearch = (state as GroupResearch);
-
     final groups = groupResearch.groups;
 
     if (groups.length == 1) throw CannotDeleteAllGroups();
@@ -390,7 +358,7 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
       if (index == i) {
         //found
         _decrementNumberOfGroups();
-        for (final e in groups[index].participants) {
+        for (final e in groups[index].enrollments) {
           _decrementEnrollments(participantId: e.participant.participantId);
         }
 
@@ -421,7 +389,6 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
   }
 
   void _kickParticipantFromGroup(String participantId) {
-    final groupResearch = (state as GroupResearch);
     final groups = groupResearch.groups;
 
     int participantIndex = -1;
@@ -434,13 +401,13 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
       }
     }
 
-    groups[participantGroupIndex].participants.removeAt(participantIndex);
+    groups[participantGroupIndex].enrollments.removeAt(participantIndex);
 
     _updateState(groups: groups);
   }
 
   void _kickParticipantFromEnrollments(String participantId) => _updateState(
-      enrollments: (state as SingularResearch).enrollments
+      enrollments: singularResearch.enrollments
         ..removeWhere((enrollment) =>
             enrollment.participant.participantId == participantId));
 
@@ -448,7 +415,7 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
   Future<void> requestParticipants(int number) async {
     _updateState(
       requestJoiners: 0,
-      sampleSize: state.numberOfEnrolled + number,
+      sampleSize: research.numberOfEnrolled + number,
       requestedParticipantsNumber: number,
       isRequestingParticipants: true,
     );
@@ -458,7 +425,6 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
 
   @override
   Future<void> addEmptyGroup() async {
-    final groupResearch = (state as GroupResearch);
     final groups = groupResearch.groups;
 
     final timeStamp = Formatter.formatTimeId();
@@ -469,7 +435,7 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
         groupId:
             "Group ${groupsLength + 1} - ${groupResearch.title} - $timeStamp",
         groupName: "Group ${groupsLength + 1}",
-        participants: [],
+        enrollments: [],
       ),
     );
 
@@ -485,7 +451,7 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
   Future<void> stopRequest() async {
     _updateState(
         isRequestingParticipants: false,
-        sampleSize: state.numberOfEnrolled,
+        sampleSize: research.numberOfEnrolled,
         requestedParticipantsNumber: 0,
         requestJoiners: 0);
 
@@ -499,9 +465,9 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
   }
 
   void _decrementEnrollments({required String participantId}) => _updateState(
-        numberOfEnrolled: state.numberOfEnrolled - 1,
+        numberOfEnrolled: research.numberOfEnrolled - 1,
         enrolledIds: [
-          ...state.enrolledIds
+          ...research.enrolledIds
             ..remove(
               participantId,
             ),
@@ -509,15 +475,15 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
       );
 
   void _incrementEnrollments({required String participantId}) => _updateState(
-        numberOfEnrolled: state.numberOfEnrolled + 1,
+        numberOfEnrolled: research.numberOfEnrolled + 1,
         enrolledIds: [
-          ...state.enrolledIds,
+          ...research.enrolledIds,
           participantId,
         ],
       );
 
   void _incrementRequestJoiners() => _updateState(
-        requestJoiners: state.requestJoiners + 1,
+        requestJoiners: research.requestJoiners + 1,
       );
 
   void _decrementNumberOfGroups() => _updateState(
@@ -526,7 +492,7 @@ class ResearchNotifier extends StateNotifier<Research> implements BaseResearch {
 
   Future<void> endResearch() async {
     _updateState(
-      researchState: ResearchState.Redeeming,
+      researchState: ResearchState.redeeming,
     );
 
     await _updateData();

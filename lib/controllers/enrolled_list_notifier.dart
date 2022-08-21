@@ -2,48 +2,42 @@ import 'package:reach_auth/providers/providers.dart';
 import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
-final enrolledPvdr =
-    StateNotifierProvider<EnrolledListNotifier, AsyncValue<List<Research>>>(
-  (ref) {
-    final userId = ref.watch(userPvdr).value?.uid;
-
-    return EnrolledListNotifier(userId ?? "", ref.watch(researchsRepoPvdr));
-  },
-);
-
 class EnrolledListNotifier extends StateNotifier<AsyncValue<List<Research>>> {
-  final String uid;
-  final ResearchsRepository repository;
+  final String _uid;
+  final ResearchsRepository _repository;
 
-  EnrolledListNotifier(this.uid, this.repository)
+  EnrolledListNotifier(this._uid, this._repository)
       : super(const AsyncValue.loading()) {
-    if (uid.isNotEmpty) {
+    if (_uid.isNotEmpty) {
       getEnrolledToResearchs();
     } else {
       const AsyncData([]);
     }
   }
 
+  List<Research> get researchs => state.value ?? [];
+
   Future<void> getEnrolledToResearchs({isRefreshing = false}) async {
     if (isRefreshing) state = const AsyncValue.loading();
-    final researchs = await repository.getEnrolledToResearchs(uid);
+    final researchs = await _repository.getEnrolledToResearchs(_uid);
     if (mounted) state = AsyncValue.data(researchs);
   }
 
-  Future<void> updateResearch({required Research updatedResearch}) async {
-    await repository.updateDocument(updatedResearch);
+  Future<void> _updateField(
+          String researchId, String fieldName, dynamic fieldData) async =>
+      await _repository.updateField(researchId, fieldName, fieldData);
 
-    state.whenData(
-      (researchs) => state = AsyncValue.data(
-        [
-          for (final research in researchs)
-            if (research.researchId == updatedResearch.researchId &&
-                updatedResearch.state != ResearchState.Redeeming)
-              updatedResearch
-            else
-              research,
-        ],
-      ),
+  Future<void> updateResearch({required Research updatedResearch}) async {
+    // await repository.upda(updatedResearch);
+
+    state = AsyncValue.data(
+      [
+        for (final research in researchs)
+          if (research.researchId == updatedResearch.researchId)
+            updatedResearch
+          else
+            research,
+      ],
     );
   }
 
@@ -59,28 +53,18 @@ class EnrolledListNotifier extends StateNotifier<AsyncValue<List<Research>>> {
       for (final research in state.value!) {
         if (research.isGroupResearch) {
           final groupResearch = research as GroupResearch;
-
-          for (final group in groupResearch.groups) {
-            for (final e in group.participants) {
-              if (e.participant.participantId == participant.participantId) {
-                // e.participant = participant;
-                //TODO FIX
-              }
-            }
-          }
-
-          repository.updateDocument(groupResearch);
+          groupResearch.updateParticipant(participant);
+          _updateField(
+            groupResearch.researchId,
+            'groups',
+            groupResearch.groups.map((e) => e.toMap()),
+          );
         } else {
           final singularResearch = research as SingularResearch;
 
-          for (final e in singularResearch.enrollments) {
-            if (e.participant.participantId == participant.participantId) {
-              // e.participant = participant;
-              //TODO FIX
-            }
-          }
+          singularResearch.updateParticipant(participant);
 
-          repository.updateDocument(singularResearch);
+          _repository.updateData(singularResearch, singularResearch.researchId);
         }
       }
     });
@@ -102,3 +86,12 @@ class EnrolledListNotifier extends StateNotifier<AsyncValue<List<Research>>> {
     removeResearch(research.researchId);
   }
 }
+
+final enrolledPvdr =
+    StateNotifierProvider<EnrolledListNotifier, AsyncValue<List<Research>>>(
+  (ref) {
+    final userId = ref.watch(userPvdr).value?.uid;
+
+    return EnrolledListNotifier(userId ?? "", ref.watch(researchsRepoPvdr));
+  },
+);
