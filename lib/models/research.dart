@@ -14,29 +14,31 @@ class Research extends BaseModel<Research> {
         'isGroupResearch': false,
         'desc': "",
         'category': "",
-        'criteria': {},
-        'questions': [],
-        'benefits': [],
-        'meetings': [],
+        'criteria': const {},
+        'questions': const [],
+        'benefits': const [],
+        'meetings': const [],
         'numberOfEnrolled': 0,
         'numberOfMeetings': 0,
         'city': "",
-        'meetingsDays': [],
-        'meetingsTimeSlots': [],
-        'meetingsMethods': [],
+        'meetingsDays': const [],
+        'meetingsTimeSlots': const [],
+        'meetingsMethods': const [],
         'startDate': DateTime.now().toString().substring(0, 10),
-        'phases': [],
-        'enrolledIds': [],
+        'phases': const [],
+        'enrolledIds': const [],
         'sampleSize': 0,
-        'rejectedIds': []
+        'rejectedIds': const []
       });
 
   Research(Map<String, dynamic> jSON) : super(jSON);
 
-  Researcher get researcher => data['researcher'];
+  Researcher get researcher => Researcher(data['researcher']);
 
   String get researchId => data['researchId'];
-  ResearchState get researchState => data['researchState'];
+
+  ResearchState get researchState =>
+      ResearchState.values[data['researchState'] ?? 0];
 
   String get title => data['title'];
   String get desc => data['desc'];
@@ -44,7 +46,7 @@ class Research extends BaseModel<Research> {
 
   Map<String, Criterion> get criteria => {
         for (final String criterion in data['criteria']!.keys)
-          criterion: data['criteria'][criterion],
+          criterion: criterionFromMap(data['criteria'][criterion]),
       };
 
   List<Question> get questions =>
@@ -60,7 +62,7 @@ class Research extends BaseModel<Research> {
 
   List get meetingsTimeSlots => data['meetingsTimeSlots'];
   List get meetingsDays => data['meetingsDays'];
-  List get meetingsMethods => data['meetingMethods'];
+  List get meetingsMethods => data['meetingsMethods'];
 
   String get startDate => data['startDate'];
 
@@ -71,7 +73,7 @@ class Research extends BaseModel<Research> {
   int get numberOfEnrolled => data['numberOfEnrolled'];
 
   List get enrolledIds => data['enrolledIds'];
-  List get rejectedIds => data['rejectedIds'];
+  List get rejectedIds => data['rejectedIds'] ?? [];
 
   List<Phase> get phases =>
       (data['phases'] as List).map((e) => Phase.fromFirestore(e)).toList();
@@ -79,9 +81,11 @@ class Research extends BaseModel<Research> {
   List<Meeting> get meetings =>
       (data['meetings'] as List).map((e) => Meeting.fromFirestore(e)).toList();
 
-  bool get isRequestingParticipants => data['isRequestingParticipants'];
-  int get requestedParticipantsNumber => data['requestedParticipantsNumber'];
-  int get requestJoiners => data['requestJoiners'];
+  bool get isRequestingParticipants =>
+      data['isRequestingParticipants'] ?? false;
+  int get requestedParticipantsNumber =>
+      data['requestedParticipantsNumber'] ?? 0;
+  int get requestJoiners => data['requestJoiners'] ?? 0;
 
   bool get isNotFull => sampleSize != numberOfEnrolled;
 
@@ -92,6 +96,8 @@ class Research extends BaseModel<Research> {
   Research copyWith(Map<String, dynamic> newData) => Research(
       {...data, ...newData..removeWhere((key, value) => value == null)});
 
+  @override
+  List<Object> get props => [toMap()];
 //for duplication
   toPartialMap() => {
         "isGroupResearch": isGroupResearch,
@@ -156,6 +162,9 @@ class Research extends BaseModel<Research> {
   void removeParticipant(String participantId) {
     enrolledIds.remove(participantId);
   }
+
+  @override
+  Research get idenitifer => Research(data);
 }
 
 abstract class BaseResearch {
@@ -166,14 +175,15 @@ abstract class BaseResearch {
   Future<void> addParticipant(Participant participant);
   Future<void> addPhases(List<Phase> phases);
 
-  Future<void> addEmptyGroup();
-  void addUniqueBenefit(Benefit benefit, EnrolledTo enrollment);
+  void addUniqueBenefit(Benefit benefit, Enrollment enrollment);
   void addUnifiedBenefit(Benefit benefit);
   Future<void> removeMeeting(Meeting meeting);
   Future<void> editMeeting(int index, Meeting meeting);
   Future<void> requestParticipants(int number);
   Future<void> kickParticipant(String participantId);
+}
 
+abstract class BaseGroupResearch {
   Future<void> changeParticipantGroup({
     required int participantIndex,
     required int fromIndex,
@@ -181,4 +191,6 @@ abstract class BaseResearch {
   });
 
   Future<void> removeGroup(int groupIndex);
+
+  Future<void> addEmptyGroup();
 }

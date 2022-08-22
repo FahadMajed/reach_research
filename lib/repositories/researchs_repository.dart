@@ -49,6 +49,10 @@ class ResearchsRepository extends BaseRepository<Research, void> {
           arrayContains: participantId,
         ),
       );
+
+  Future<void> updateResearcher(
+          String researchId, Researcher researcher) async =>
+      await updateField(researchId, 'researcher', researcher.toMap());
 }
 
 final researchsRepoPvdr = Provider(

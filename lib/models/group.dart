@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'package:reach_core/core/models/participant.dart';
 import 'package:reach_research/models/benefit.dart';
 
-import 'enroled_to.dart';
+import 'enrollment.dart';
 
 class Group {
   final String groupName;
   final String groupId;
-  final List<EnrolledTo> enrollments;
+  final List<Enrollment> enrollments;
 
   Group({
     required this.groupName,
@@ -28,8 +28,8 @@ class Group {
     return Group(
       groupName: groupData['groupName'] ?? '',
       groupId: groupData["groupId"] ?? "",
-      enrollments: (groupData["participants"] as List)
-          .map((v) => EnrolledTo.fromMap(v))
+      enrollments: (groupData["enrollments"] as List)
+          .map((v) => Enrollment.fromMap(v))
           .toList(),
     );
   }
@@ -56,4 +56,6 @@ class Group {
   void updateEnrollment(Participant participant, int index) {
     enrollments[index] = enrollments[index].copyWith(participant: participant);
   }
+
+  bool isNotFull(int groupSize) => enrollments.length < groupSize;
 }

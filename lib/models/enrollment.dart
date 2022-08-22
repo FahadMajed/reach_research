@@ -4,7 +4,7 @@ import 'benefit.dart';
 
 enum EnrollmentStatus { enrolled, rejected, finished }
 
-class EnrolledTo {
+class Enrollment {
   final Participant participant;
 
   final EnrollmentStatus status;
@@ -12,7 +12,7 @@ class EnrolledTo {
   final String groupId;
   final bool redeemed;
 
-  EnrolledTo({
+  Enrollment({
     required this.benefits,
     required this.status,
     required this.redeemed,
@@ -20,8 +20,8 @@ class EnrolledTo {
     required this.participant,
   });
 
-  factory EnrolledTo.fromMap(Map enrollmentData) {
-    return EnrolledTo(
+  factory Enrollment.fromMap(Map enrollmentData) {
+    return Enrollment(
         participant: Participant(enrollmentData["participant"] ?? {}),
         status: EnrollmentStatus.values[enrollmentData['status']],
         benefits: (enrollmentData['benefits'] as List)
@@ -41,7 +41,7 @@ class EnrolledTo {
   toMap() {
     return {
       "participant": participant.toPartialMap(),
-      'status': status,
+      'status': status.index,
       'redeemed': redeemed,
       'benefits': benefits.map((x) => x.toMap()).toList(),
     };
@@ -50,14 +50,14 @@ class EnrolledTo {
   @override
   String toString() => toMap().toString();
 
-  EnrolledTo copyWith({
+  Enrollment copyWith({
     Participant? participant,
     EnrollmentStatus? status,
     List<Benefit>? benefits,
     String? groupId,
     bool? redeemed,
   }) {
-    return EnrolledTo(
+    return Enrollment(
       participant: participant ?? this.participant,
       status: status ?? this.status,
       benefits: benefits ?? this.benefits,

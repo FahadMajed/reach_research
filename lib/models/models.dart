@@ -1,7 +1,7 @@
 export 'answer.dart';
 export 'benefit.dart';
 export 'criterion.dart';
-export 'enroled_to.dart';
+export 'enrollment.dart';
 export 'group.dart';
 export 'group_research.dart';
 export 'meeting.dart';

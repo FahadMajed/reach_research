@@ -31,6 +31,9 @@ class GroupResearch extends Research {
     return data;
   }
 
+  // @override
+  // GroupResearch get idenitifer => GroupResearch(data);
+
   factory GroupResearch.copy(
           Research research, int numberOfGroups, int groupSize) =>
       GroupResearch({
@@ -38,7 +41,7 @@ class GroupResearch extends Research {
         'sampleSize': groupSize * numberOfGroups,
         'numberOfGroups': numberOfGroups,
         'groupSize': groupSize,
-        'groups': [],
+        'groups': const [],
         'isGroupResearch': true,
       });
 
@@ -51,8 +54,10 @@ class GroupResearch extends Research {
   @override
   String toString() => toMap().toString();
 
+  @override
+  List<Object> get props => [toMap()];
   ////////////////////////////////////
-  void addUniqueBenefit(EnrolledTo enrollment, Benefit benefitToInsert) {
+  void addUniqueBenefit(Enrollment enrollment, Benefit benefitToInsert) {
     for (final group in groups) {
       bool alreadyInserted = false;
 
@@ -74,24 +79,7 @@ class GroupResearch extends Research {
     }
   }
 
-  void addUnifiedBenefit(Benefit benefitToInsert) {
-    for (final enrollment in getAllEnrollments()) {
-      bool alreadyInserted = false;
-      for (final benefit in enrollment.benefits) {
-        if (benefit.benefitName == benefitToInsert.benefitName) {
-          alreadyInserted = true;
-        }
-      }
-
-      if (alreadyInserted) {
-        enrollment.removeBenefit(benefitToInsert.benefitName);
-      }
-
-      enrollment.benefits.add(benefitToInsert);
-    }
-  }
-
-  List<EnrolledTo> getAllEnrollments() => [
+  List<Enrollment> getAllEnrollments() => [
         for (final g in groups)
           for (final enrollment in g.enrollments) enrollment
       ];

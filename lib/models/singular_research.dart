@@ -4,10 +4,47 @@ import 'package:reach_research/research.dart';
 class SingularResearch extends Research {
   SingularResearch(Map<String, dynamic> jSON) : super(jSON);
 
-  List<EnrolledTo> get enrollments =>
-      (data['enrollments'] as List).map((e) => EnrolledTo.fromMap(e)).toList();
+  List<Enrollment> get enrollments =>
+      (data['enrollments'] as List).map((e) => Enrollment.fromMap(e)).toList();
 
-  void addUniqueBenefit(EnrolledTo enrollment, Benefit benefitToInsert) {
+  @override
+  SingularResearch get idenitifer => SingularResearch(data);
+
+  @override
+  toMap() {
+    final data = super.toMap();
+    data["enrollments"] = enrollments.map((x) => x.toMap()).toList();
+    return data;
+  }
+
+  @override
+  toPartialMap() {
+    final data = super.toPartialMap();
+    data["enrollments"] = enrollments.map((x) => x.toMap()).toList();
+    return data;
+  }
+
+  @override
+  SingularResearch copyWith(Map<String, dynamic> newData) => SingularResearch({
+        ...data,
+        ...newData
+          ..removeWhere(
+            (key, value) => value == null,
+          ),
+      });
+
+  @override
+  factory SingularResearch.copy(Research research) => SingularResearch({
+        ...research.toMap(),
+        'enrollments': const [],
+        'isGroupResearch': false,
+      });
+
+  @override
+  List<Object> get props => [toMap()];
+  /////////////////////////////////
+
+  void addUniqueBenefit(Enrollment enrollment, Benefit benefitToInsert) {
     bool alreadyInserted = false;
 
     for (final benefit in enrollment.benefits) {
@@ -37,39 +74,6 @@ class SingularResearch extends Research {
   void removeBenefit(int index, String benefitName) => enrollments[index]
       .benefits
       .removeWhere((b) => b.benefitName == benefitName);
-
-  @override
-  toMap() {
-    final data = super.toMap();
-    data["enrollments"] = enrollments.map((x) => x.toMap()).toList();
-    return data;
-  }
-
-  @override
-  toPartialMap() {
-    final data = super.toPartialMap();
-    data["enrollments"] = enrollments.map((x) => x.toMap()).toList();
-    return data;
-  }
-
-  @override
-  SingularResearch copyWith(Map<String, dynamic> newData) => SingularResearch({
-        ...data,
-        ...newData
-          ..removeWhere(
-            (key, value) => value == null,
-          ),
-      });
-
-  @override
-  factory SingularResearch.copy(Research research) => SingularResearch({
-        ...research.toMap(),
-        'enrollments': [],
-        'isGroupResearch': false,
-      });
-
-  @override
-  String toString() => toMap().toString();
 
   void updateParticipant(Participant participant) {
     final index = getParticipantIndex(participant.participantId);

@@ -5,7 +5,7 @@ final currentResearchIdPvdr = StateProvider<String>(
   (ref) => "",
 );
 
-final enrollmentsPvdr = Provider<List<EnrolledTo>>((ref) {
+final enrollmentsPvdr = Provider<List<Enrollment>>((ref) {
   final research = ref.watch(researchPvdr);
 
   return research is SingularResearch

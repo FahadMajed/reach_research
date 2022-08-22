@@ -61,9 +61,8 @@ class ResearchListNotifier extends StateNotifier<AsyncValue<List<Research>>> {
 
   Future<void> updateResearcher({required Researcher researcher}) async {
     for (final research in researchs) {
-      _updateField(
+      _repository.updateResearcher(
         research.researchId,
-        "researcher",
         researcher,
       );
       updateResearch(copyResearchWith(research, researcher: researcher));

@@ -18,11 +18,11 @@ final researchStatePvdr =
 class ResearchStateNotifier extends StateNotifier<Research> {
   ResearchStateNotifier(Researcher researcher, String researchId)
       : super(Research.empty()) {
-    state = Research.empty()
-      ..copyWith({
-        'researcher': researcher,
-        'researchId': researchId,
-      });
+    state = copyResearchWith(
+      Research.empty(),
+      researcher: researcher,
+      researchId: researchId,
+    );
   }
 
   void _updateState({
