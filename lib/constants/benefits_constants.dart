@@ -9,10 +9,10 @@ enum Benefits { Discount, Cash, Results, Voucher }
 enum BenefitInputType { TextField, XinY }
 
 final benefitsType = {
-  Benefits.Discount.name: BenefitType.Unified,
-  Benefits.Cash.name: BenefitType.Cash,
-  Benefits.Results.name: BenefitType.Unified,
-  Benefits.Voucher.name: BenefitType.Unique,
+  Benefits.Discount.name: BenefitType.unified,
+  Benefits.Cash.name: BenefitType.cash,
+  Benefits.Results.name: BenefitType.unified,
+  Benefits.Voucher.name: BenefitType.unique,
 };
 
 final benefitsInputType = {

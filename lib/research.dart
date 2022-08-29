@@ -1,8 +1,7 @@
 export 'constants/constants.dart';
-export 'controllers/controllers.dart';
-export 'models/models.dart';
-export 'providers/providers.dart';
+
+export 'data/data.dart';
+export 'domain/domain.dart';
 export 'reach_research.dart';
-export 'repositories/repositories.dart';
 export 'ui/ui.dart';
 export 'utils/utils.dart';

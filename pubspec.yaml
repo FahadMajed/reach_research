@@ -13,6 +13,8 @@ dependencies:
     path: /Users/fahad/AndroidStudioProjects/reach_core
   reach_auth:
     path: /Users/fahad/AndroidStudioProjects/reach_auth
+  reach_chats:
+    path: /Users/fahad/AndroidStudioProjects/reach_chats
   
   
 
