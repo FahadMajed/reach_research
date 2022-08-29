@@ -1,10 +1,9 @@
-import 'package:reach_core/core/data/repositories/notifications_repository.dart';
 import 'package:reach_research/research.dart';
 
 class KickParticipant extends UseCase<Research, KickParticipantParams> {
   final ResearchsRepository repository;
-  final NotificationsRepository? notificationsRepo;
-  KickParticipant(this.repository, this.notificationsRepo);
+
+  KickParticipant(this.repository);
   @override
   Future<Research> call(KickParticipantParams params) async {
     final partId = params.participantId;
@@ -15,9 +14,7 @@ class KickParticipant extends UseCase<Research, KickParticipantParams> {
       numberOfEnrolled: research.numberOfEnrolled - 1,
       enrolledIds: research.enrolledIds..remove(partId),
     );
-    await notificationsRepo
-        ?.unsubscribeFromResearch(updatedResearch.researchId);
-
+//unsubscriping from topic will be handled to the server
     return await repository
         .updateData(updatedResearch, updatedResearch.researchId)
         .then((_) => updatedResearch);

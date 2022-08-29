@@ -1,6 +1,7 @@
 import 'package:reach_chats/repositories/chats_repository.dart';
 import 'package:reach_core/core/core.dart';
 import 'package:reach_core/core/data/repositories/notifications_repository.dart';
+import 'package:reach_research/domain/use_cases/research/remove_participants.dart';
 import 'package:reach_research/research.dart';
 
 final researchPvdr =
@@ -28,7 +29,6 @@ final researchPvdr =
       ),
       kickParticipantUseCase: KickParticipant(
         repo,
-        notificationsRepo,
       ),
       removeMeetingUseCase: RemoveMeeting(repo),
       requestParticipantsUseCase: RequestParticipants(repo),
@@ -41,6 +41,7 @@ final researchPvdr =
       updateMeetingUseCase: UpdateMeeting(repo),
       updateParticipantsRequestUseCase: UpdateParticipantsRequest(repo),
       getResearchUseCase: GetResearch(repo),
+      removeParticipantsUseCase: RemoveParticipants(repo),
     );
   },
 );

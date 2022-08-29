@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:reach_core/core/core.dart';
+import 'package:reach_research/domain/use_cases/research/remove_participants.dart';
 import 'package:reach_research/research.dart';
 
 //after creation
@@ -7,6 +8,9 @@ class ResearchNotifier extends StateNotifier<AsyncValue<Research>>
     implements BaseResearch {
   Research get research => state.value ?? Research.empty();
   final String researcherId;
+
+  void set(Research research) => state = AsyncData(research);
+
   ResearchNotifier({
     required this.researcherId,
     required this.addParticipantToResearch,
@@ -22,6 +26,7 @@ class ResearchNotifier extends StateNotifier<AsyncValue<Research>>
     required this.kickParticipantUseCase,
     required this.togglePhaseUseCase,
     required this.getResearchUseCase,
+    required this.removeParticipantsUseCase,
   }) : super(const AsyncLoading()) {
     if (researcherId.isNotEmpty) getResearch();
   }
@@ -40,6 +45,7 @@ class ResearchNotifier extends StateNotifier<AsyncValue<Research>>
   final RemoveMeeting removeMeetingUseCase;
   final UpdateMeeting updateMeetingUseCase;
 
+  final RemoveParticipants removeParticipantsUseCase;
   final KickParticipant kickParticipantUseCase;
 
   final RequestParticipants requestParticipantsUseCase;
@@ -145,6 +151,18 @@ class ResearchNotifier extends StateNotifier<AsyncValue<Research>>
           .call(TogglePhaseParams(
             research: research,
             phaseIndex: index,
+          ))
+          .then(
+            (research) => state = AsyncData(research),
+            onError: (e) => state = AsyncError(e),
+          );
+
+  @override
+  Future<void> removeParticipants(List toRemoveIds) async =>
+      await removeParticipantsUseCase
+          .call(RemoveParticipantsParams(
+            research: research,
+            toRemoveIds: toRemoveIds,
           ))
           .then(
             (research) => state = AsyncData(research),

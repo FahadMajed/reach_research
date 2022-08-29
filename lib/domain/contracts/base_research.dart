@@ -20,6 +20,7 @@ abstract class BaseResearch {
   Future<void> removeMeeting(Meeting meeting);
   Future<void> updateMeeting(int index, Meeting meeting);
 
+  Future<void> removeParticipants(List toRemoveIds);
   Future<void> kickParticipant(String participantId);
 
   Future<void> requestParticipants(int number);
