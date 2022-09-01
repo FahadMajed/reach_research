@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:reach_core/core/models/participant.dart';
+import 'package:reach_core/core/domain/domain.dart';
 
 import 'models.dart';
 
@@ -10,6 +10,8 @@ class Group {
   final String groupName;
   final String groupId;
   final List<Enrollment> enrollments;
+
+  int get numberOfEnrolled => enrollments.length;
 
   Group({
     required this.groupName,
@@ -24,6 +26,7 @@ class Group {
       'groupId': groupId,
       'enrollments': enrollments.map((x) => x.toMap()).toList(),
       'researchId': researchId,
+      'numberOfEnrolled': numberOfEnrolled,
     };
   }
 
@@ -43,10 +46,13 @@ class Group {
   @override
   String toString() => 'Group(groupName: $groupName, groupId: $groupId,} })})';
 
-  Group copyWith({required String groupName}) {
+  Group copyWith({
+    String? groupName,
+    List<Enrollment>? enrollments,
+  }) {
     return Group(
-      groupName: groupName,
-      enrollments: enrollments,
+      groupName: groupName ?? this.groupName,
+      enrollments: enrollments ?? this.enrollments,
       groupId: groupId,
       researchId: researchId,
     );

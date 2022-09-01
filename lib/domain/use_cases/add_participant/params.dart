@@ -11,14 +11,3 @@ class AddParticipantParams {
     this.researchId = "",
   });
 }
-
-class AddParticipantToGroupParams extends AddParticipantParams {
-  final List<Group> groups;
-  final GroupResearch groupResearch;
-
-  AddParticipantToGroupParams({
-    required super.participant,
-    required this.groups,
-    required this.groupResearch,
-  });
-}

@@ -32,21 +32,44 @@ class ResearchsRepository extends BaseRepository<Research, Meeting> {
           String researchId, Researcher researcher) async =>
       await updateField(researchId, 'researcher', researcher.toMap());
 
-  Future<Research> getResearch(String researcherId) async => await getQuery(
-        remoteDatabase
-            .where(
-          'researcher.researchId',
+  Future<Research?> getResearch(String researcherId) async => await getQuery(
+        where(
+          'researcher.researcherId',
           isEqualTo: researcherId,
-        )
-            .where(
+        ).where(
           'researchState',
           whereIn: [
             ResearchState.ongoing.index,
             ResearchState.upcoming.index,
           ],
         ),
-      ).then((researchs) =>
-          researchs.isNotEmpty ? researchs.first : Research.empty());
+      ).then((researchs) => researchs.isNotEmpty ? researchs.first : null);
+
+  Future<List<Research>> getResearchsForParticipant(
+      String participantId) async {
+    final upcomings = await getQuery(
+      where(
+        'researchState',
+        isEqualTo: ResearchState.upcoming.index,
+      ).limit(50),
+    );
+
+    final requestings = await getQuery(
+      where(
+        'isRequestingParticipants',
+        isEqualTo: true,
+      ).where(
+        'researchState',
+        isEqualTo: ResearchState.ongoing.index,
+      ),
+    );
+
+    return [...upcomings, ...requestings];
+  }
+
+  Future<Research?> getEnrolledResearch(String participantId) async =>
+      await getQuery(where('enrolledIds', arrayContains: participantId))
+          .then((researchs) => researchs.isNotEmpty ? researchs.first : null);
 }
 
 final researchsRepoPvdr = Provider(
@@ -81,14 +104,14 @@ final researchsRepoPvdr = Provider(
 //     }
 
 //     final List<Research> allUpcomingResearchs = await getQuery(
-//       remoteDatabase.where(
+//     where(
 //         'researcher.researcherId',
 //         isEqualTo: ResearchState.upcoming.index,
 //       ),
 //     );
 
 //     final List<Research> requestingParticipantsResearchs = await getQuery(
-//       remoteDatabase.where(
+//     where(
 //         'isRequestingParticipants',
 //         isEqualTo: true,
 //       ),
@@ -99,7 +122,7 @@ final researchsRepoPvdr = Provider(
 
 //   Future<List<Research>> getEnrolledToResearchs(String participantId) async =>
 //       await getQuery(
-//         remoteDatabase.where(
+//     where(
 //           'state',
 //           whereIn: [
 //             ResearchState.ongoing.index,

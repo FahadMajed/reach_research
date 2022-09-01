@@ -5,24 +5,32 @@ class EnrollmentsRepository extends BaseRepository<Enrollment, void> {
   EnrollmentsRepository({required super.remoteDatabase});
 
   Future<void> addEnrollment(Enrollment enrollment) async =>
-      await create(enrollment, _getDocId(enrollment));
+      await create(enrollment, enrollment.id);
 
   Future<void> updateEnrollment(
     Enrollment enrollment,
   ) async =>
       await updateData(
         enrollment,
-        _getDocId(enrollment),
+        enrollment.id,
       );
 
   Future<void> removeEnrollment(Enrollment enrollment) async =>
-      delete(_getDocId(enrollment));
-
-  String _getDocId(Enrollment enrollment) =>
-      enrollment.id + enrollment.researchId!;
+      delete(enrollment.id);
 
   Future<List<Enrollment>> getEnrollments(String researchId) async =>
-      await getQuery(remoteDatabase.where('researchId', isEqualTo: researchId));
+      await getQuery(where('researchId', isEqualTo: researchId));
+
+  Future<void> updateParticipant(
+    String researchId,
+    Participant participant,
+  ) async {
+    print(researchId);
+    final enrollments =
+        await getQuery(where('researchId', isEqualTo: researchId));
+    for (final e in enrollments)
+      await updateField(e.id, 'participant', participant.toPartialMap());
+  }
 }
 
 final enrollmentsRepoPvdr = Provider(

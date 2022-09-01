@@ -32,7 +32,7 @@ class KickParticipantFromGroup
     final updatedGroup = _groups[participantGroupIndex]
       ..enrollments.removeAt(participantIndex);
 
-    await participantsRepository.removeCurrentEnrollment(
+    await participantsRepository.removeEnrollment(
       partId,
       updatedGroup.researchId,
     );

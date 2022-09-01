@@ -1,6 +1,5 @@
 import 'package:reach_core/core/core.dart';
 import 'package:reach_research/domain/domain.dart';
-import 'package:reach_research/domain/use_cases/add_benefit/unified/add_unified_benefit_singular.dart';
 
 class EnrollmentsNotifier extends StateNotifier<AsyncValue<List<Enrollment>>> {
   EnrollmentsNotifier({
@@ -108,6 +107,6 @@ class EnrollmentsNotifier extends StateNotifier<AsyncValue<List<Enrollment>>> {
     );
   }
 
-  void _removeEnrollment(Enrollment enrollment) =>
-      state = AsyncData(enrollments..removeWhere((e) => e.id == enrollment.id));
+  void _removeEnrollment(Enrollment enrollment) => state =
+      AsyncData(enrollments..removeWhere((e) => e.partId == enrollment.partId));
 }

@@ -1,9 +1,11 @@
-import 'package:reach_core/core/models/participant.dart';
+import 'package:reach_core/core/core.dart';
 import 'package:reach_research/domain/models/models.dart';
 
 //ACTIONS MUST PERSISTS
 abstract class BaseResearch {
   Future<void> getResearch();
+
+  Future<void> getEnrolledResearch();
 
   Future<void> addResearch(Research research);
 

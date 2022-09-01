@@ -1,16 +1,20 @@
+import 'package:reach_chats/repositories/chats_repository.dart';
 import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
-//TODO Add to group chat if exists
-class AddParticipantToGroup
-    extends UseCase<Group, AddParticipantToGroupParams> {
-  AddParticipantToGroup(this.repository);
+class AddParticipantToGroup extends UseCase<void, AddParticipantToGroupParams> {
+  AddParticipantToGroup({
+    required this.groupsRepository,
+    required this.chatsRepository,
+  });
 
-  final GroupsRepository repository;
+  final GroupsRepository groupsRepository;
+  final ChatsRepository chatsRepository;
 
   AddParticipantToGroupParams? _params;
 
-  List<Group> get _groups => _params!.groups;
+  final List<Group> _groups = [];
+  Group? firstAvailableGroup;
 
   Participant get _participant => _params!.participant;
   int get _groupSize => _params!.groupResearch.groupSize;
@@ -19,10 +23,22 @@ class AddParticipantToGroup
   int get _lastGroupNumber => _groups.indexOf(_groups.last) + 1;
 
   @override
-  Future<Group> call(AddParticipantToGroupParams params) {
+  Future<void> call(AddParticipantToGroupParams params) async {
     _params = params;
 
-    return _addParticipantToGroup();
+    firstAvailableGroup =
+        await groupsRepository.getFirstAvailableGroup(_researchId, _groupSize);
+
+    _addParticipantToGroup().then(
+      (group) async {
+        if (params.groupResearch.researchState == ResearchState.ongoing) {
+          await chatsRepository.addParticipantToGroupChat(
+            group.groupId,
+            _participant,
+          );
+        }
+      },
+    );
   }
 
   Future<Group> _addParticipantToGroup() async {
@@ -71,7 +87,7 @@ class AddParticipantToGroup
       ),
     );
 
-    return await repository
+    return await groupsRepository
         .updateGroup(
           firstAvailableGroup,
         )
@@ -119,5 +135,14 @@ class AddParticipantToGroup
   // so last group number will be its index + 1
 
   Future<Group> _addGroup(Group group) async =>
-      await repository.addGroup(group);
+      await groupsRepository.addGroup(group);
+}
+
+class AddParticipantToGroupParams extends AddParticipantParams {
+  final GroupResearch groupResearch;
+
+  AddParticipantToGroupParams({
+    required super.participant,
+    required this.groupResearch,
+  });
 }

@@ -1,7 +1,8 @@
+import 'package:reach_auth/providers/providers.dart';
 import 'package:reach_chats/repositories/chats_repository.dart';
 import 'package:reach_core/core/core.dart';
 import 'package:reach_core/core/data/repositories/notifications_repository.dart';
-import 'package:reach_research/domain/use_cases/research/remove_participants.dart';
+import 'package:reach_research/domain/use_cases/research/get_enrolled_research.dart';
 import 'package:reach_research/research.dart';
 
 final researchPvdr =
@@ -11,37 +12,41 @@ final researchPvdr =
     final chatsRepo = ref.read(chatsRepoPvdr);
     final notificationsRepo = ref.read(notificationsRepoPvdr);
     final researchersRepo = ref.read(researcherRepoPvdr);
+    final partsRepo = ref.read(partsRepoPvdr);
 
-    final researcherId =
-        ref.watch(researcherPvdr.select((r) => r.value?.researcherId ?? ""));
+    final uid = ref.watch(userIdPvdr);
+    final isResearcher = ref.read(isResearcherPvdr);
 
     return ResearchNotifier(
-      researcherId: researcherId,
-      addMeetingUseCase: AddMeeting(repo),
+      uid: uid,
+      isResearcher: isResearcher,
+      addMeeting: AddMeeting(repo),
+      getEnrolledResearch: GetEnrolledResearch(repo),
       addParticipantToResearch: AddParticipantToResearch(
         repo,
+        partsRepo,
         notificationsRepo,
       ),
-      addResearchUseCase: AddResearch(repo, researchersRepo),
-      endResearchUseCase: EndResearch(
+      addResearch: AddResearch(repo, researchersRepo),
+      endResearch: EndResearch(
         researcherRepository: researchersRepo,
         researchsRepository: repo,
       ),
-      kickParticipantUseCase: KickParticipant(
+      kickParticipant: KickParticipant(
         repo,
       ),
-      removeMeetingUseCase: RemoveMeeting(repo),
-      requestParticipantsUseCase: RequestParticipants(repo),
-      startResearchUseCase: StartResearch(
+      removeMeeting: RemoveMeeting(repo),
+      requestParticipants: RequestParticipants(repo),
+      startResearch: StartResearch(
         chatsRepository: chatsRepo,
         researchsRepository: repo,
       ),
-      stopRequestUseCase: StopRequest(repo),
-      togglePhaseUseCase: TogglePhase(repo),
-      updateMeetingUseCase: UpdateMeeting(repo),
-      updateParticipantsRequestUseCase: UpdateParticipantsRequest(repo),
-      getResearchUseCase: GetResearch(repo),
-      removeParticipantsUseCase: RemoveParticipants(repo),
+      stopRequest: StopRequest(repo),
+      togglePhase: TogglePhase(repo),
+      updateMeeting: UpdateMeeting(repo),
+      updateParticipantsRequest: UpdateParticipantsRequest(repo),
+      getResearch: GetResearch(repo),
+      removeParticipants: RemoveParticipants(repo),
     );
   },
 );
@@ -50,12 +55,14 @@ final researchPvdr =
 final researchStatePvdr =
     StateNotifierProvider<ResearchStateNotifier, Research>(
   (ref) {
-    final researcher = ref.watch(researcherPvdr).value;
+    final researcher = ref.watch(researcherPvdr).value!;
     return ResearchStateNotifier(
-      researcher ?? Researcher.empty(),
+      researcher,
       Formatter.formatResearchId(
-        researcher?.researcherId ?? "",
+        researcher.researcherId,
       ),
     );
   },
 );
+
+final isResearcherPvdr = Provider((ref) => true);

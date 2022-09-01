@@ -19,12 +19,12 @@ class KickParticipantFromEnrollments
     final enrollment = params.enrollment;
 
     await chatsRepository.removeResearchIdFromChat(
-      Formatter.formatChatId(params.researcherId, enrollment.id),
+      Formatter.formatChatId(params.researcherId, enrollment.partId),
       enrollment.researchId!,
     );
 
-    await participantsRepository.removeCurrentEnrollment(
-      enrollment.id,
+    await participantsRepository.removeEnrollment(
+      enrollment.partId,
       enrollment.researchId!,
     );
 

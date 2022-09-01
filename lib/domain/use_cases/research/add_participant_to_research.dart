@@ -5,8 +5,18 @@ import 'package:reach_research/research.dart';
 class AddParticipantToResearch
     extends UseCase<Research, AddParticipantToResearchParams> {
   final ResearchsRepository repository;
+  final ParticipantsRepository participantRepository;
+  final AddParticipantToGroup addParticipantToGroup;
+  final AddParticipantToEnrollments addParticipantToEnrollments;
   final NotificationsRepository? notificationsRepo;
-  AddParticipantToResearch(this.repository, this.notificationsRepo);
+
+  AddParticipantToResearch(
+    this.repository,
+    this.participantRepository,
+    this.addParticipantToGroup,
+    this.addParticipantToEnrollments,
+    this.notificationsRepo,
+  );
 
   @override
   Future<Research> call(AddParticipantToResearchParams params) async {
@@ -21,10 +31,11 @@ class AddParticipantToResearch
       throw ResearchIsFull();
     }
 
-    research.enrolledIds.add(participant.participantId);
     numberOfEnrolled++;
 
-    research = copyResearchWith(research, numberOfEnrolled: numberOfEnrolled);
+    research = copyResearchWith(research,
+        numberOfEnrolled: numberOfEnrolled,
+        enrolledIds: [...research.enrolledIds, participant.participantId]);
 
     if (isRequestingParticipants) {
       requestJoiners++;
@@ -45,8 +56,21 @@ class AddParticipantToResearch
       }
     }
 
-   
     await notificationsRepo?.subscribeToResearch(research.researchId);
+
+    await participantRepository.addEnrollment(
+      participant.participantId,
+      research.researchId,
+    );
+
+    if (research is GroupResearch) {
+      addParticipantToGroup(
+        AddParticipantToGroupParams(
+          participant: participant,
+          groupResearch: research,
+        ),
+      );
+    }
 
     return await repository
         .updateData(research, research.researchId)

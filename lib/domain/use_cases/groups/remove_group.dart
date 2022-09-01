@@ -34,12 +34,12 @@ class RemoveGroup extends UseCase<List<Group>, RemoveGroupParams> {
       } else if (_toRemoveIndex == i) {
         //found
         for (final enrollment in _groups[i].enrollments) {
-          await participantsRepository.removeCurrentEnrollment(
-              enrollment.id, _groups[i].researchId);
+          await participantsRepository.removeEnrollment(
+              enrollment.partId, _groups[i].researchId);
           await chatsRepository.removeResearchIdFromChat(
             Formatter.formatChatId(
               params.researcherId,
-              enrollment.id,
+              enrollment.partId,
             ),
             _groups[i].researchId,
           );

@@ -1,6 +1,5 @@
 import 'package:reach_chats/repositories/chats_repository.dart';
 import 'package:reach_core/core/core.dart';
-import 'package:reach_research/domain/use_cases/add_benefit/unified/add_uinified_benefit_group.dart';
 import 'package:reach_research/research.dart';
 
 final groupsPvdr =
@@ -12,18 +11,21 @@ final groupsPvdr =
     final partsRepo = ref.read(partsRepoPvdr);
     return GroupsNotifier(
       research: research as GroupResearch,
-      getGroupsForResearchUseCase: GetGroupsForResearch(groupsRepo),
-      addEmptyGroupUseCase: AddEmptyGroup(groupsRepo),
-      addUniqueBenefitUseCase: AddUniqueGroupBenefit(groupsRepo),
-      addUnifiedBenefitUseCase: AddUnifiedGroupBeneftit(groupsRepo),
-      addParticipantToGroupUseCase: AddParticipantToGroup(groupsRepo),
-      changeParticipantGroupUseCase: ChangeParticipantGroup(groupsRepo),
-      removeGroupUseCase: RemoveGroup(
+      getGroupsForResearch: GetGroupsForResearch(groupsRepo),
+      addEmptyGroup: AddEmptyGroup(groupsRepo),
+      addUniqueBenefit: AddUniqueGroupBenefit(groupsRepo),
+      addUnifiedBenefit: AddUnifiedGroupBeneftit(groupsRepo),
+      addParticipantToGroup: AddParticipantToGroup(
+        groupsRepository: groupsRepo,
+        chatsRepository: chatsRepo,
+      ),
+      changeParticipantGroup: ChangeParticipantGroup(groupsRepo),
+      removeGroup: RemoveGroup(
         groupsRepository: groupsRepo,
         chatsRepository: chatsRepo,
         participantsRepository: partsRepo,
       ),
-      kickParticipantUseCase: KickParticipantFromGroup(
+      kickParticipant: KickParticipantFromGroup(
         groupsRepository: groupsRepo,
         chatsRepository: chatsRepo,
         participantsRepository: partsRepo,

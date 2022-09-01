@@ -1,40 +1,47 @@
-import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:reach_core/core/core.dart';
-import 'package:reach_research/domain/use_cases/add_benefit/unified/add_uinified_benefit_group.dart';
 import 'package:reach_research/research.dart';
 
 class GroupsNotifier extends StateNotifier<AsyncValue<List<Group>>>
     implements BaseGroup {
   final GroupResearch research;
 
-  @protected
-  final AddParticipantToGroup addParticipantToGroupUseCase;
-  @protected
-  final AddEmptyGroup addEmptyGroupUseCase;
-  @protected
-  final AddUniqueGroupBenefit addUniqueBenefitUseCase;
-  @protected
-  final AddUnifiedGroupBeneftit addUnifiedBenefitUseCase;
-  @protected
-  final ChangeParticipantGroup changeParticipantGroupUseCase;
-  @protected
-  final RemoveGroup removeGroupUseCase;
-  @protected
-  final KickParticipantFromGroup kickParticipantUseCase;
-  @protected
-  final GetGroupsForResearch getGroupsForResearchUseCase;
+  late final AddParticipantToGroup _addParticipantToGroup;
+
+  late final AddEmptyGroup _addEmptyGroup;
+
+  late final AddUniqueGroupBenefit _addUniqueBenefit;
+
+  late final AddUnifiedGroupBeneftit _addUnifiedBenefit;
+
+  late final ChangeParticipantGroup _changeParticipantGroup;
+
+  late final RemoveGroup _removeGroup;
+
+  late final KickParticipantFromGroup _kickParticipant;
+
+  late final GetGroupsForResearch _getGroupsForResearch;
 
   GroupsNotifier({
     required this.research,
-    required this.getGroupsForResearchUseCase,
-    required this.addUniqueBenefitUseCase,
-    required this.addEmptyGroupUseCase,
-    required this.addUnifiedBenefitUseCase,
-    required this.addParticipantToGroupUseCase,
-    required this.changeParticipantGroupUseCase,
-    required this.removeGroupUseCase,
-    required this.kickParticipantUseCase,
+    required getGroupsForResearch,
+    required addUniqueBenefit,
+    required addEmptyGroup,
+    required addUnifiedBenefit,
+    required addParticipantToGroup,
+    required changeParticipantGroup,
+    required removeGroup,
+    required kickParticipant,
   }) : super(const AsyncLoading()) {
+    _getGroupsForResearch = getGroupsForResearch;
+    _addUniqueBenefit = addUniqueBenefit;
+    _addEmptyGroup = addEmptyGroup;
+    _addUnifiedBenefit = addUnifiedBenefit;
+    _addParticipantToGroup = addParticipantToGroup;
+    _changeParticipantGroup = changeParticipantGroup;
+    _removeGroup = removeGroup;
+    _kickParticipant = kickParticipant;
+
     if (research.researchId.isNotEmpty) getGroups();
   }
 
@@ -45,7 +52,7 @@ class GroupsNotifier extends StateNotifier<AsyncValue<List<Group>>>
   Future<void> getGroups() async {
     state = const AsyncLoading();
 
-    await getGroupsForResearchUseCase
+    await _getGroupsForResearch
         .call(GetGroupsForResearchParams(researchId: _researchId))
         .then(
           (groups) => state = AsyncData(groups),
@@ -53,110 +60,136 @@ class GroupsNotifier extends StateNotifier<AsyncValue<List<Group>>>
         );
   }
 
-  Future<void> addParticipant(Participant participant) async =>
-      await addParticipantToGroupUseCase
-          .call(
-            AddParticipantToGroupParams(
-              participant: participant,
-              groups: _groups,
-              groupResearch: research,
-            ),
-          )
-          .then(
-              //if participant was added to existing group, update
-              //otherwise add group to list
-              (group) => groupExists(group.groupId)
-                  ? updateGroup(group)
-                  : addGroup(group),
-              onError: (e) => state = AsyncError(e));
+  // Future<void> addParticipant(Participant participant) async {
+  //   groupsLoading();
+  //   await _addParticipantToGroup
+  //       .call(
+  //         AddParticipantToGroupParams(
+  //           participant: participant,
+  //           groups: _groups,
+  //           groupResearch: research,
+  //         ),
+  //       )
+  //       .then(
+  //           //if participant was added to existing group, update
+  //           //otherwise add group to list
+  //           (group) => groupExists(group.groupId)
+  //               ? updateGroup(group)
+  //               : addGroup(group),
+  //           onError: (e) => groupsLoaded().then((_) => throw e));
+  //   groupsLoaded();
+  // }
 
   @override
-  Future<void> addEmptyGroup() async => await addEmptyGroupUseCase
-      .call(
-        AddEmptyGroupParams(
-          groupsLength: _groups.length,
-          researchId: _researchId,
-          researchTitle: _researchTitle,
-        ),
-      )
-      .then(
-        (group) => addGroup(group),
-        onError: (e) => state = AsyncError(e),
-      );
+  Future<void> addEmptyGroup() async {
+    groupsLoading();
+    await _addEmptyGroup
+        .call(
+          AddEmptyGroupParams(
+            groupsLength: _groups.length,
+            researchId: _researchId,
+            researchTitle: _researchTitle,
+          ),
+        )
+        .then(
+          (group) => addGroup(group),
+          onError: (e) => groupsLoaded().then((_) => throw e),
+        );
+    groupsLoaded();
+  }
 
   @override
-  Future<void> addUnifiedBenefit(Benefit benefit) async =>
-      await addUnifiedBenefitUseCase
-          .call(AddUnifiedGroupBenefitParams(
-            groups: _groups,
-            benefit: benefit,
-          ))
-          .then(
-            (groups) => state = AsyncData(groups),
-            onError: (e) => state = AsyncError(e),
-          );
+  Future<void> addUnifiedBenefit(Benefit benefit) async {
+    groupsLoading();
+    await _addUnifiedBenefit
+        .call(AddUnifiedGroupBenefitParams(
+          groups: _groups,
+          benefit: benefit,
+        ))
+        .then(
+          (groups) => state = AsyncData(groups),
+          onError: (e) => groupsLoaded().then((_) => throw e),
+        );
+    groupsLoaded();
+  }
 
   @override
   Future<void> addUniqueBenefit(
     Group group,
     Benefit benefit,
     Enrollment enrollment,
-  ) async =>
-      await addUniqueBenefitUseCase
-          .call(
-            AddUniqueGroupBenefitsParams(
-              benefit: benefit,
-              enrollment: enrollment,
-              group: group,
-            ),
-          )
-          .then(
-            (group) => updateGroup(group),
-            onError: (e) => state = AsyncError(e),
-          );
+  ) async {
+    groupsLoading();
+    await _addUniqueBenefit
+        .call(
+          AddUniqueGroupBenefitsParams(
+            benefit: benefit,
+            enrollment: enrollment,
+            group: group,
+          ),
+        )
+        .then(
+          (group) => updateGroup(group),
+          onError: (e) => groupsLoaded().then((_) => throw e),
+        );
+    groupsLoaded();
+  }
 
   @override
   Future<void> changeParticipantGroup(
-          {required int participantIndex,
-          required int fromIndex,
-          required int toIndex}) async =>
-      await changeParticipantGroupUseCase
-          .call(
-            ChangeParticipantGroupParams(
-                groups: _groups,
-                fromIndex: fromIndex,
-                toIndex: toIndex,
-                participantIndex: participantIndex),
-          )
-          .then(
-            (groups) => state = AsyncData(groups),
-            onError: (e) => state = AsyncError(e),
-          );
+      {required int participantIndex,
+      required int fromIndex,
+      required int toIndex}) async {
+    groupsLoading();
+    await _changeParticipantGroup
+        .call(
+          ChangeParticipantGroupParams(
+              groups: _groups,
+              fromIndex: fromIndex,
+              toIndex: toIndex,
+              participantIndex: participantIndex),
+        )
+        .then(
+          (groups) => state = AsyncData(groups),
+          onError: (e) => groupsLoaded().then((_) => throw e),
+        );
+    groupsLoaded();
+  }
 
   @override
-  Future<void> kickParticipant(Participant participant) async =>
-      await kickParticipantUseCase
-          .call(KickParticipantFromGroupParams(
-            participant: participant,
+  Future<void> kickParticipant(Participant participant) async {
+    groupsLoading();
+    await _kickParticipant
+        .call(KickParticipantFromGroupParams(
+          participant: participant,
+          groups: _groups,
+          researcherId: research.researcher.researcherId,
+        ))
+        .then(
+          (group) => updateGroup(group),
+          onError: (e) => groupsLoaded().then((_) => throw e),
+        );
+    groupsLoaded();
+  }
+
+  @override
+  Future<void> removeGroup(int groupIndex) async {
+    groupsLoading();
+    await _removeGroup
+        .call(
+          RemoveGroupParams(
             groups: _groups,
+            toRemoveIndex: groupIndex,
             researcherId: research.researcher.researcherId,
-          ))
-          .then(
-            (group) => updateGroup(group),
-            onError: (e) => state = AsyncError(e),
-          );
+          ),
+        )
+        .then(
+          (groups) => state = AsyncData(groups),
+          onError: (e) => groupsLoaded().then((_) => throw e),
+        );
 
-  @override
-  Future<void> removeGroup(int groupIndex) async => await removeGroupUseCase
-      .call(RemoveGroupParams(
-        groups: _groups,
-        toRemoveIndex: groupIndex,
-        researcherId: research.researcher.researcherId,
-      ))
-      .then(
-        (groups) => state = AsyncData(groups),
-        onError: (e) => state = AsyncError(e),
-      );
+    groupsLoaded();
+  }
 
   void updateGroup(Group group) {
     final groups = List<Group>.from(_groups);
@@ -177,3 +210,8 @@ class GroupsNotifier extends StateNotifier<AsyncValue<List<Group>>>
     return false;
   }
 }
+
+final RxBool isGroupsLoading = false.obs;
+
+void groupsLoading() => isGroupsLoading.value = true;
+Future<void> groupsLoaded() async => isGroupsLoading.value = false;

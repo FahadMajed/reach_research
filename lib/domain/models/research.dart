@@ -8,11 +8,12 @@ enum ResearchState { upcoming, ongoing, redeeming, done }
 class Research extends BaseModel<Research> {
   factory Research.empty() => Research({
         'researchId': "",
-        'researcher': Researcher.empty(),
-        'researchState': ResearchState.upcoming,
+        'researcher': Researcher.empty().toMap(),
+        'researchState': ResearchState.upcoming.index,
         'title': "",
         'isGroupResearch': false,
         'desc': "",
+        "image": 'Economics1.webp',
         'category': "",
         'criteria': const {},
         'questions': const [],
@@ -102,7 +103,7 @@ class Research extends BaseModel<Research> {
   toPartialMap() => {
         "isGroupResearch": isGroupResearch,
         'researchId': researchId,
-        'state': researchState.index,
+        'researchState': researchState.index,
         'title': title,
         'benefits': benefits.map((x) => x.toMap()).toList(),
         'meetings': meetings.map((x) => x.toMap()).toList(),
@@ -117,9 +118,10 @@ class Research extends BaseModel<Research> {
 //for master doc
   @override
   toMap() => {
+        ...super.data,
         'researchId': researchId,
         "isGroupResearch": isGroupResearch,
-        'state': researchState.index,
+        'researchState': researchState.index,
         'title': title,
         'desc': desc,
         'category': category,

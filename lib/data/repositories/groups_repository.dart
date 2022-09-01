@@ -5,7 +5,20 @@ class GroupsRepository extends BaseRepository<Group, void> {
   GroupsRepository({required super.remoteDatabase});
 
   Future<List<Group>> getGroupsForResearch(String researchId) async =>
-      await getQuery(remoteDatabase.where('researchId', isEqualTo: researchId));
+      await getQuery(where('researchId', isEqualTo: researchId));
+
+  Future<Group?> getFirstAvailableGroup(
+    String researchId,
+    int groupSize,
+  ) async =>
+      await getQuery(
+        where('researchId', isEqualTo: researchId)
+            .where('numberOfEnrolled', isLessThan: groupSize)
+            .limit(1),
+      ).then(
+        (groups) => groups.isEmpty ? null : groups.first,
+        onError: (e) => throw e,
+      );
 
   Future<Group> addGroup(Group newGroup) async => await create(
         newGroup,
@@ -19,8 +32,29 @@ class GroupsRepository extends BaseRepository<Group, void> {
 
   Future<void> removeGroup(Group group) async => delete(group.groupId);
 
-  updateGroupName(String groupId, String newName) async =>
+  Future<void> updateGroupName(String groupId, String newName) async =>
       await updateField(groupId, 'groupName', newName);
+
+  Future<void> updateParticipant(
+    String researchId,
+    Participant participant,
+  ) async {
+    final groups = await getQuery(where('researchId', isEqualTo: researchId));
+
+    for (final group in groups) {
+      await updateGroup(
+        group.copyWith(
+          enrollments: [
+            for (final e in group.enrollments)
+              if (e.partId == participant.participantId)
+                e.copyWith(participant: participant)
+              else
+                e
+          ],
+        ),
+      );
+    }
+  }
 }
 
 final groupsRepoPvdr = Provider(

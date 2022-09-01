@@ -16,7 +16,7 @@ class EndResearch extends UseCase<void, EndResearchParams> {
       researchState: ResearchState.redeeming,
     );
 
-    await researcherRepository.removeResearch(
+    await researcherRepository.endResearch(
       updatedResearch.researcher.researcherId,
       updatedResearch.researchId,
     );

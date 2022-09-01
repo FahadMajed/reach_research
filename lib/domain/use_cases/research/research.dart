@@ -4,6 +4,7 @@ export 'end_research.dart';
 export 'get_research.dart';
 export 'kick_participant.dart';
 export 'meetings/meetings.dart';
+export 'remove_participants.dart';
 export 'request_participants/request_participants.dart';
 export 'start_research.dart';
 export 'toggle_phase.dart';

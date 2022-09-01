@@ -9,6 +9,8 @@ class GroupResearch extends Research {
   List<Group> get groups =>
       (data['groups'] as List).map((e) => Group.fromMap(e)).toList();
 
+  int get groupsLength => data['groupsLength'] ?? 0;
+
   @override
   toMap() {
     final data = super.toMap();
@@ -16,6 +18,7 @@ class GroupResearch extends Research {
     data['numberOfGroups'] = numberOfGroups;
     data['groupSize'] = groupSize;
     data['groups'] = groups.map((g) => g.toMap()).toList();
+    data['groups']
 
     return data;
   }

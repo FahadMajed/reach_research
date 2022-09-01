@@ -1,4 +1,4 @@
-import 'package:reach_core/core/models/models.dart';
+import 'package:reach_core/core/domain/domain.dart';
 
 import 'benefit.dart';
 
@@ -12,7 +12,9 @@ class Enrollment {
   final String groupId;
   final bool redeemed;
 
-  String get id => participant.participantId;
+  String get partId => participant.participantId;
+  String get id => participant.participantId + (researchId ?? "");
+
   Enrollment({
     this.researchId = "",
     required this.benefits,
