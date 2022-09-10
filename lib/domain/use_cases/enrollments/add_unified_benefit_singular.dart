@@ -1,5 +1,5 @@
 import 'package:reach_research/data/repositories/enrollments_repository.dart';
-import 'package:reach_research/domain/use_cases/add_benefit/unified/unified.dart';
+
 import 'package:reach_research/research.dart';
 
 class AddUnifiedBenefitForEnrollments extends AddUnifiedBenefit<
@@ -16,19 +16,7 @@ class AddUnifiedBenefitForEnrollments extends AddUnifiedBenefit<
     final enrollmentsAfterUpdate = <Enrollment>[];
 
     for (final enrollment in enrollments) {
-      bool alreadyInserted = false;
-      for (final b in enrollment.benefits) {
-        if (b.benefitName == benefitToInsert.benefitName) {
-          alreadyInserted = true;
-        }
-      }
-
-      if (alreadyInserted) {
-        enrollment.benefits
-            .removeWhere((b) => b.benefitName == benefitToInsert.benefitName);
-      }
-      enrollment.benefits.add(benefitToInsert);
-      enrollmentsAfterUpdate.add(enrollment);
+      enrollmentsAfterUpdate.add(enrollment.addBenefit(benefitToInsert));
     }
     for (final e in enrollmentsAfterUpdate) {
       await repository.updateEnrollment(e);
@@ -43,5 +31,15 @@ class AddUnifiedBenefitForEnrollmentsParams extends AddUnifiedBenefitsParams {
   AddUnifiedBenefitForEnrollmentsParams({
     required super.benefit,
     required this.enrollments,
+  });
+}
+
+abstract class AddUnifiedBenefit<T, P> extends UseCase<T, P> {}
+
+abstract class AddUnifiedBenefitsParams {
+  final Benefit benefit;
+
+  AddUnifiedBenefitsParams({
+    required this.benefit,
   });
 }

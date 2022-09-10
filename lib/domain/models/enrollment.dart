@@ -1,10 +1,10 @@
-import 'package:reach_core/core/domain/domain.dart';
+import 'package:reach_core/core/core.dart';
 
 import 'benefit.dart';
 
 enum EnrollmentStatus { enrolled, rejected, finished }
 
-class Enrollment {
+class Enrollment extends Equatable {
   final Participant participant;
   final String? researchId;
   final EnrollmentStatus status;
@@ -13,9 +13,13 @@ class Enrollment {
   final bool redeemed;
 
   String get partId => participant.participantId;
+  String get name => participant.name;
+  String get imageUrl => participant.imageUrl;
+  int get color => participant.defaultColor;
+
   String get id => participant.participantId + (researchId ?? "");
 
-  Enrollment({
+  const Enrollment({
     this.researchId = "",
     required this.benefits,
     required this.status,
@@ -36,8 +40,16 @@ class Enrollment {
         groupId: enrollmentData["groupId"] ?? "");
   }
 
-  void removeBenefit(String benefitName) =>
-      benefits.removeWhere((b) => b.benefitName == benefitName);
+  Enrollment addBenefit(Benefit benefit) {
+    return copyWith(
+        benefits: benefits.isEmpty
+            ? [benefit]
+            : [
+                ...benefits
+                  ..removeWhere((b) => b.benefitName == benefit.benefitName),
+                benefit
+              ]);
+  }
 
   Future<void> markAsSeen() async {}
 
@@ -47,6 +59,7 @@ class Enrollment {
     return {
       "participant": participant.toPartialMap(),
       'status': status.index,
+      'groupId': groupId,
       'redeemed': redeemed,
       'benefits': benefits.map((x) => x.toMap()).toList(),
       'researchId': researchId,
@@ -62,6 +75,7 @@ class Enrollment {
     List<Benefit>? benefits,
     String? groupId,
     bool? redeemed,
+    String? researchId,
   }) {
     return Enrollment(
       participant: participant ?? this.participant,
@@ -69,14 +83,29 @@ class Enrollment {
       benefits: benefits ?? this.benefits,
       groupId: groupId ?? this.groupId,
       redeemed: redeemed ?? this.redeemed,
-      researchId: researchId,
+      researchId: researchId ?? this.researchId,
     );
   }
 
   factory Enrollment.empty() => Enrollment(
-      benefits: [],
+      benefits: const [],
       status: EnrollmentStatus.rejected,
       redeemed: false,
       groupId: '',
       participant: Participant.empty());
+
+  factory Enrollment.init(
+    Participant participant,
+    String groupId,
+  ) =>
+      Enrollment(
+          benefits: const [],
+          status: EnrollmentStatus.enrolled,
+          redeemed: false,
+          groupId: groupId,
+          participant: participant.partial);
+
+  @override
+  List<Object?> get props =>
+      [benefits, redeemed, groupId, participant.participantId, status];
 }

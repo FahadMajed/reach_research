@@ -1,3 +1,4 @@
+import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
 class StopRequest extends UseCase<Research, StopRequestParams> {
@@ -26,3 +27,7 @@ class StopRequestParams {
   final Research research;
   StopRequestParams({required this.research});
 }
+
+final stopRequestPvdr = Provider<StopRequest>((ref) => StopRequest(
+      ref.read(researchsRepoPvdr),
+    ));

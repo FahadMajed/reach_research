@@ -9,6 +9,16 @@ class ResearchException implements Exception {
   String toString() {
     return message;
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+
+    return other is ResearchException && other.message == message;
+  }
+
+  @override
+  int get hashCode => message.hashCode;
 }
 
 class ResearchIsFull extends ResearchException {
@@ -21,4 +31,8 @@ class ResearchRequestIsFull extends ResearchException {
 
 class CannotDeleteAllGroups extends ResearchException {
   CannotDeleteAllGroups() : super("cannot delete all groups");
+}
+
+class ResearchNotFound extends ResearchException {
+  ResearchNotFound() : super("research not found");
 }

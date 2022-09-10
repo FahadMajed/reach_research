@@ -22,14 +22,10 @@ class EnrollmentsRepository extends BaseRepository<Enrollment, void> {
       await getQuery(where('researchId', isEqualTo: researchId));
 
   Future<void> updateParticipant(
-    String researchId,
+    String enrollmentId,
     Participant participant,
   ) async {
-    print(researchId);
-    final enrollments =
-        await getQuery(where('researchId', isEqualTo: researchId));
-    for (final e in enrollments)
-      await updateField(e.id, 'participant', participant.toPartialMap());
+    await updateField(enrollmentId, 'participant', participant.toPartialMap());
   }
 }
 

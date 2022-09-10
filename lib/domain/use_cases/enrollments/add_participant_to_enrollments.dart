@@ -1,5 +1,4 @@
-import 'dart:developer';
-
+import 'package:reach_core/core/core.dart';
 import 'package:reach_research/data/repositories/enrollments_repository.dart';
 import 'package:reach_research/domain/models/models.dart';
 import 'package:reach_research/domain/use_cases/use_cases.dart';
@@ -12,11 +11,10 @@ class AddParticipantToEnrollments
 
   @override
   Future<Enrollment> call(AddParticipantParams params) async {
-    log(params.researchId ?? "RESEARCH ID IS NULL");
     final enrollment = Enrollment(
       participant: params.participant,
       status: EnrollmentStatus.enrolled,
-      benefits: [],
+      benefits: const [],
       groupId: '',
       redeemed: false,
       researchId: params.researchId,
@@ -24,3 +22,17 @@ class AddParticipantToEnrollments
     return await repository.addEnrollment(enrollment).then((_) => enrollment);
   }
 }
+
+class AddParticipantParams {
+  final Participant participant;
+  final String? researchId;
+  AddParticipantParams({
+    required this.participant,
+    this.researchId = "",
+  });
+}
+
+final addParticipantToEnrollmentsPvdr =
+    Provider((ref) => AddParticipantToEnrollments(
+          ref.read(enrollmentsRepoPvdr),
+        ));

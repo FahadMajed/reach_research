@@ -18,8 +18,8 @@ class StartResearch extends UseCase<Research, StartResearchParams> {
       researchState: ResearchState.ongoing,
     );
 
-    for (final id in params.enrollmentsResearcherChattedIds) {
-      await chatsRepository.addResearchIdToChat(
+    for (final id in params.enrollmentsResearcherChattedIds ?? []) {
+      await chatsRepository.addResearchIdToPeerChat(
         Formatter.formatChatId(updatedResearch.researcher.researcherId, id),
         updatedResearch.researchId,
       );
@@ -33,11 +33,16 @@ class StartResearch extends UseCase<Research, StartResearchParams> {
 class StartResearchParams {
   final List<Phase> phases;
   final Research research;
-  final List enrollmentsResearcherChattedIds;
+  final List? enrollmentsResearcherChattedIds;
 
   StartResearchParams({
     required this.phases,
     required this.research,
-    required this.enrollmentsResearcherChattedIds,
+    this.enrollmentsResearcherChattedIds,
   });
 }
+
+final startResearchPvdr = Provider<StartResearch>((ref) => StartResearch(
+      researchsRepository: ref.read(researchsRepoPvdr),
+      chatsRepository: ref.read(chatsRepoPvdr),
+    ));

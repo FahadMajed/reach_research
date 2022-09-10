@@ -50,11 +50,6 @@ class Meeting extends ChangeNotifier {
     );
   }
 
-  String toJson() => json.encode(toMap());
-
-  factory Meeting.fromJson(String source) =>
-      Meeting.fromFirestore(json.decode(source));
-
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

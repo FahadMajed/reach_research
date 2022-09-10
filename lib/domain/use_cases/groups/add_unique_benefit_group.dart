@@ -1,3 +1,4 @@
+import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
 class AddUniqueGroupBenefit
@@ -8,26 +9,11 @@ class AddUniqueGroupBenefit
 
   @override
   Future<Group> call(AddUniqueGroupBenefitsParams params) async {
-    final _group = params.group;
-    final enrollment = params.enrollment;
+    Group _group = params.group;
+    final enrollmentId = params.enrollment.id;
     final benefitToInsert = params.benefit;
 
-    int partIndex =
-        _group.getParticipantIndex(enrollment.participant.participantId);
-
-    bool alreadyInserted = false;
-
-    for (final benefit in enrollment.benefits) {
-      benefit.benefitName == benefitToInsert.benefitName
-          ? alreadyInserted = true
-          : null;
-    }
-
-    if (alreadyInserted) {
-      _group.removeBenefit(partIndex, benefitToInsert.benefitName);
-    }
-
-    _group.addBenefit(partIndex, benefitToInsert);
+    _group = _group.addBenefit(enrollmentId, benefitToInsert);
 
     return await repository.updateGroup(_group).then((_) => _group);
   }
@@ -42,3 +28,6 @@ class AddUniqueGroupBenefitsParams extends AddUniqueBenefitParams {
     required super.enrollment,
   });
 }
+
+final addUniqueGroupBenefitPvdr = Provider<AddUniqueGroupBenefit>(
+    (ref) => AddUniqueGroupBenefit(ref.read(groupsRepoPvdr)));

@@ -10,9 +10,9 @@ class ResearchsRepository extends BaseRepository<Research, Meeting> {
       meeting,
     );
 
-    await remoteDatabase.updateField(docId, 'id', docId);
-
-    return meeting.copyWith(id: docId);
+    return await remoteDatabase
+        .updateSubdocField(reserachId, docId, 'id', docId)
+        .then((_) => meeting.copyWith(id: docId));
   }
 
   Future<void> updateMeeting(String researchId, Meeting meeting) async =>
@@ -28,11 +28,14 @@ class ResearchsRepository extends BaseRepository<Research, Meeting> {
         meeting.id!,
       );
 
+  Future<List<Meeting>> getMeetings(String researchId) async =>
+      await getAllSubcollection(researchId);
+
   Future<void> updateResearcher(
           String researchId, Researcher researcher) async =>
       await updateField(researchId, 'researcher', researcher.toMap());
 
-  Future<Research?> getResearch(String researcherId) async => await getQuery(
+  Future<Research> getResearch(String researcherId) async => await getQuery(
         where(
           'researcher.researcherId',
           isEqualTo: researcherId,
@@ -43,10 +46,10 @@ class ResearchsRepository extends BaseRepository<Research, Meeting> {
             ResearchState.upcoming.index,
           ],
         ),
-      ).then((researchs) => researchs.isNotEmpty ? researchs.first : null);
+      ).then((researchs) =>
+          researchs.isNotEmpty ? researchs.first : throw ResearchNotFound());
 
-  Future<List<Research>> getResearchsForParticipant(
-      String participantId) async {
+  Future<List<Research>> getResearchsForParticipant() async {
     final upcomings = await getQuery(
       where(
         'researchState',
@@ -70,6 +73,12 @@ class ResearchsRepository extends BaseRepository<Research, Meeting> {
   Future<Research?> getEnrolledResearch(String participantId) async =>
       await getQuery(where('enrolledIds', arrayContains: participantId))
           .then((researchs) => researchs.isNotEmpty ? researchs.first : null);
+
+  Future<void> incrementGroupsLength(String researchId) async =>
+      await remoteDatabase.incrementField(
+        researchId,
+        'groupsLength',
+      );
 }
 
 final researchsRepoPvdr = Provider(

@@ -8,9 +8,10 @@ abstract class BaseGroup {
     required int toIndex,
   });
 
-  Future<void> removeGroup(int groupIndex);
+//returns kicked participants ids
+  Future<List<String>> removeGroup(int groupIndex);
 
-  Future<void> kickParticipant(Participant participant);
+  Future<void> kickParticipant(int groupIndex, Participant participant);
 
   Future<void> addEmptyGroup();
 

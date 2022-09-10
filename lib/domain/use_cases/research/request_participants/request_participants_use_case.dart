@@ -1,3 +1,4 @@
+import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
 class RequestParticipants extends UseCase<Research, RequestParticipantsParams> {
@@ -38,3 +39,8 @@ class RequestParticipantsParams {
     required this.research,
   });
 }
+
+final requestParticipantsPvdr =
+    Provider<RequestParticipants>((ref) => RequestParticipants(
+          ref.read(researchsRepoPvdr),
+        ));

@@ -1,19 +1,18 @@
 import 'dart:convert';
 
-import 'package:reach_core/core/domain/domain.dart';
+import 'package:reach_core/core/core.dart';
 
 import 'models.dart';
 
-class Group {
+class Group extends Equatable {
   final String researchId;
 
   final String groupName;
   final String groupId;
   final List<Enrollment> enrollments;
 
-  int get numberOfEnrolled => enrollments.length;
-
-  Group({
+  List<String> get enrollmentsIds => enrollments.map((e) => e.partId).toList();
+  const Group({
     required this.groupName,
     required this.enrollments,
     required this.groupId,
@@ -25,8 +24,8 @@ class Group {
       'groupName': groupName,
       'groupId': groupId,
       'enrollments': enrollments.map((x) => x.toMap()).toList(),
+      'numberOfEnrolled': enrollments.length,
       'researchId': researchId,
-      'numberOfEnrolled': numberOfEnrolled,
     };
   }
 
@@ -44,7 +43,7 @@ class Group {
   String toJson() => json.encode(toMap());
 
   @override
-  String toString() => 'Group(groupName: $groupName, groupId: $groupId,} })})';
+  String toString() => toMap().toString();
 
   Group copyWith({
     String? groupName,
@@ -61,11 +60,11 @@ class Group {
   int getParticipantIndex(String participantId) => enrollments.indexWhere(
       (element) => element.participant.participantId == participantId);
 
-  void removeBenefit(int partIndex, String benefitName) =>
-      enrollments[partIndex].removeBenefit(benefitName);
-
-  void addBenefit(int partIndex, Benefit benefitToInsert) =>
-      enrollments[partIndex].benefits.add(benefitToInsert);
+  Group addBenefit(String enrollmentId, Benefit benefitToInsert) =>
+      copyWith(enrollments: [
+        for (final e in enrollments)
+          if (e.id == enrollmentId) e.addBenefit(benefitToInsert) else e
+      ]);
 
   void updateEnrollment(Participant participant, int index) {
     enrollments[index] = enrollments[index].copyWith(participant: participant);
@@ -73,10 +72,20 @@ class Group {
 
   bool isNotFull(int groupSize) => enrollments.length < groupSize;
 
-  factory Group.empty() => Group(
+  factory Group.empty() => const Group(
         groupName: '',
         enrollments: [],
         groupId: '',
         researchId: '',
+      );
+
+  @override
+  List<Object?> get props => [groupName, enrollments, groupId, researchId];
+
+  Group removeEnrollment(String participantId) => copyWith(
+        enrollments: [
+          for (final e in enrollments)
+            if (e.partId != participantId) e
+        ],
       );
 }

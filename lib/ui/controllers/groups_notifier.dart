@@ -1,10 +1,13 @@
-import 'package:get/get.dart';
+import 'package:reach_chats/chats.dart';
 import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
 class GroupsNotifier extends StateNotifier<AsyncValue<List<Group>>>
     implements BaseGroup {
-  final GroupResearch research;
+  void set(List<Group> groups) => state = AsyncData(groups);
+
+  final Research research;
+  final Reader read;
 
   late final AddParticipantToGroup _addParticipantToGroup;
 
@@ -12,7 +15,7 @@ class GroupsNotifier extends StateNotifier<AsyncValue<List<Group>>>
 
   late final AddUniqueGroupBenefit _addUniqueBenefit;
 
-  late final AddUnifiedGroupBeneftit _addUnifiedBenefit;
+  late final AddUnifiedGroupBenefit _addUnifiedBenefit;
 
   late final ChangeParticipantGroup _changeParticipantGroup;
 
@@ -23,24 +26,17 @@ class GroupsNotifier extends StateNotifier<AsyncValue<List<Group>>>
   late final GetGroupsForResearch _getGroupsForResearch;
 
   GroupsNotifier({
+    required this.read,
     required this.research,
-    required getGroupsForResearch,
-    required addUniqueBenefit,
-    required addEmptyGroup,
-    required addUnifiedBenefit,
-    required addParticipantToGroup,
-    required changeParticipantGroup,
-    required removeGroup,
-    required kickParticipant,
   }) : super(const AsyncLoading()) {
-    _getGroupsForResearch = getGroupsForResearch;
-    _addUniqueBenefit = addUniqueBenefit;
-    _addEmptyGroup = addEmptyGroup;
-    _addUnifiedBenefit = addUnifiedBenefit;
-    _addParticipantToGroup = addParticipantToGroup;
-    _changeParticipantGroup = changeParticipantGroup;
-    _removeGroup = removeGroup;
-    _kickParticipant = kickParticipant;
+    _getGroupsForResearch = read(getGroupsPvdr);
+    _addUniqueBenefit = read(addUniqueGroupBenefitPvdr);
+    _addEmptyGroup = read(addEmptyGroupPvdr);
+    _addUnifiedBenefit = read(addUnifiedGroupBenefitPvdr);
+    _addParticipantToGroup = read(addParticipantToGroupPvdr);
+    _changeParticipantGroup = read(changeParticipantGroupPvdr);
+    _removeGroup = read(removeGroupPvdr);
+    _kickParticipant = read(kickParticipantFromGroupPvdr);
 
     if (research.researchId.isNotEmpty) getGroups();
   }
@@ -48,6 +44,8 @@ class GroupsNotifier extends StateNotifier<AsyncValue<List<Group>>>
   List<Group> get _groups => state.value ?? [];
   String get _researchId => research.researchId;
   String get _researchTitle => research.title;
+
+  ResearchNotifier get researchNotifier => read(researchPvdr.notifier);
 
   Future<void> getGroups() async {
     state = const AsyncLoading();
@@ -60,25 +58,24 @@ class GroupsNotifier extends StateNotifier<AsyncValue<List<Group>>>
         );
   }
 
-  // Future<void> addParticipant(Participant participant) async {
-  //   groupsLoading();
-  //   await _addParticipantToGroup
-  //       .call(
-  //         AddParticipantToGroupParams(
-  //           participant: participant,
-  //           groups: _groups,
-  //           groupResearch: research,
-  //         ),
-  //       )
-  //       .then(
-  //           //if participant was added to existing group, update
-  //           //otherwise add group to list
-  //           (group) => groupExists(group.groupId)
-  //               ? updateGroup(group)
-  //               : addGroup(group),
-  //           onError: (e) => groupsLoaded().then((_) => throw e));
-  //   groupsLoaded();
-  // }
+  Future<void> addParticipant(Participant participant) async {
+    groupsLoading();
+    // await _addParticipantToGroup
+    //     .call(
+    //       AddParticipantToGroupParams(
+    //         participant: participant,
+    //         groupResearch: research,
+    //       ),
+    //     )
+    //     .then(
+    //         //if participant was added to existing group, update
+    //         //otherwise add group to list
+    //         (group) => groupExists(group.groupId)
+    //             ? updateGroup(group)
+    //             : addGroup(group),
+    //         onError: (e) => onGroupError(e));
+    groupsLoaded();
+  }
 
   @override
   Future<void> addEmptyGroup() async {
@@ -136,59 +133,74 @@ class GroupsNotifier extends StateNotifier<AsyncValue<List<Group>>>
   }
 
   @override
-  Future<void> changeParticipantGroup(
-      {required int participantIndex,
-      required int fromIndex,
-      required int toIndex}) async {
+  Future<void> changeParticipantGroup({
+    required int participantIndex,
+    required int fromIndex,
+    required int toIndex,
+    GroupChat? groupChatFrom,
+    GroupChat? groupChatTo,
+  }) async {
     groupsLoading();
     await _changeParticipantGroup
         .call(
           ChangeParticipantGroupParams(
-              groups: _groups,
-              fromIndex: fromIndex,
-              toIndex: toIndex,
-              participantIndex: participantIndex),
+            from: _groups[fromIndex],
+            to: _groups[toIndex],
+            participantIndexInGroup: participantIndex,
+            groupChatFrom: groupChatFrom,
+            groupChatTo: groupChatTo,
+          ),
         )
         .then(
-          (groups) => state = AsyncData(groups),
-          onError: (e) => groupsLoaded().then((_) => throw e),
+          (groups) => this
+            ..updateGroup(groups.first)
+            ..updateGroup(groups.last),
+          onError: (e) => onGroupError(e),
         );
     groupsLoaded();
   }
 
   @override
-  Future<void> kickParticipant(Participant participant) async {
+  Future<void> kickParticipant(
+    int groupIndex,
+    Participant participant,
+  ) async {
     groupsLoading();
     await _kickParticipant
         .call(KickParticipantFromGroupParams(
-          participant: participant,
-          groups: _groups,
+          participantId: participant.participantId,
+          group: _groups[groupIndex],
           researcherId: research.researcher.researcherId,
         ))
         .then(
           (group) => updateGroup(group),
-          onError: (e) => groupsLoaded().then((_) => throw e),
+          onError: (e) => onGroupError(e),
         );
+
     groupsLoaded();
   }
 
   @override
-  Future<void> removeGroup(int groupIndex) async {
+  Future<List<String>> removeGroup(
+    int groupIndex, {
+    List? chatIds,
+  }) async {
     groupsLoading();
-    await _removeGroup
+    return await _removeGroup
         .call(
-          RemoveGroupParams(
-            groups: _groups,
-            toRemoveIndex: groupIndex,
-            researcherId: research.researcher.researcherId,
-          ),
-        )
-        .then(
-          (groups) => state = AsyncData(groups),
-          onError: (e) => groupsLoaded().then((_) => throw e),
-        );
-
-    groupsLoaded();
+      RemoveGroupParams(
+        groups: _groups,
+        toRemoveIndex: groupIndex,
+        researchTitle: _researchTitle,
+        chatsIds: chatIds,
+      ),
+    )
+        .then((groups) {
+      groupsLoaded();
+      final kickedIds = _groups[groupIndex].enrollmentsIds;
+      state = AsyncData(groups);
+      return kickedIds;
+    }, onError: (e) => onGroupError(e));
   }
 
   void updateGroup(Group group) {
@@ -208,6 +220,11 @@ class GroupsNotifier extends StateNotifier<AsyncValue<List<Group>>>
       if (group.groupId == groupId) return true;
     }
     return false;
+  }
+
+  void onGroupError(e) {
+    groupsLoaded();
+    throw e;
   }
 }
 

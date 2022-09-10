@@ -1,9 +1,12 @@
+import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
 class KickParticipant extends UseCase<Research, KickParticipantParams> {
   final ResearchsRepository repository;
 
-  KickParticipant(this.repository);
+  KickParticipant(
+    this.repository,
+  );
   @override
   Future<Research> call(KickParticipantParams params) async {
     final partId = params.participantId;
@@ -15,6 +18,7 @@ class KickParticipant extends UseCase<Research, KickParticipantParams> {
       enrolledIds: research.enrolledIds..remove(partId),
     );
 //unsubscriping from topic will be handled to the server
+
     return await repository
         .updateData(updatedResearch, updatedResearch.researchId)
         .then((_) => updatedResearch);
@@ -30,3 +34,7 @@ class KickParticipantParams {
     required this.research,
   });
 }
+
+final kickParticipantPvdr = Provider<KickParticipant>((ref) => KickParticipant(
+      ref.read(researchsRepoPvdr),
+    ));

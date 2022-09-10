@@ -36,6 +36,8 @@ class Research extends BaseModel<Research> {
 
   Researcher get researcher => Researcher(data['researcher']);
 
+  String get researcherId => researcher.researcherId;
+
   String get researchId => data['researchId'];
 
   ResearchState get researchState =>
@@ -118,34 +120,15 @@ class Research extends BaseModel<Research> {
 //for master doc
   @override
   toMap() => {
-        ...super.data,
-        'researchId': researchId,
-        "isGroupResearch": isGroupResearch,
+        ...data,
         'researchState': researchState.index,
-        'title': title,
-        'desc': desc,
-        'category': category,
         'criteria': criteria
             .map((name, criteria) => MapEntry(name, criterionToMap(criteria))),
         'questions': questions.map((x) => x.toMap()).toList(),
         'benefits': benefits.map((x) => x.toMap()).toList(),
-        'city': city,
         'meetings': meetings.map((x) => x.toMap()).toList(),
-        'image': image,
-        "startDate": startDate,
-        "numberOfMeetings": numberOfMeetings,
-        "meetingsDays": meetingsDays,
-        "meetingsTimeSlots": meetingsTimeSlots,
-        "meetingsMethods": meetingsMethods,
-        'sampleSize': sampleSize,
-        'numberOfEnrolled': numberOfEnrolled,
         'phases': phases.map((x) => x.toMap()).toList(),
-        'enrolledIds': enrolledIds,
-        "rejectedIds": rejectedIds,
-        'researcher': researcher.toPartialMap(),
-        'isRequestingParticipants': isRequestingParticipants,
-        "requestedParticipantsNumber": requestedParticipantsNumber,
-        "requestJoiners": requestJoiners,
+        'researcher': researcher.toResearchMap(),
       };
   ///////////////////////////////////////
 

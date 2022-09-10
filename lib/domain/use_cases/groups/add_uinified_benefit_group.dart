@@ -1,11 +1,11 @@
-import 'package:reach_research/domain/use_cases/add_benefit/unified/add_unified_benefit.dart';
+import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
-class AddUnifiedGroupBeneftit
+class AddUnifiedGroupBenefit
     extends AddUnifiedBenefit<List<Group>, AddUnifiedGroupBenefitParams> {
   final GroupsRepository repository;
 
-  AddUnifiedGroupBeneftit(this.repository);
+  AddUnifiedGroupBenefit(this.repository);
 
   @override
   Future<List<Group>> call(AddUnifiedGroupBenefitParams params) async {
@@ -13,20 +13,9 @@ class AddUnifiedGroupBeneftit
     final _benefitToInsert = params.benefit;
     final groupsAfterUpdate = <Group>[];
 
-    for (final group in _groups) {
+    for (var group in _groups) {
       for (final enrollment in group.enrollments) {
-        bool alreadyInserted = false;
-        for (final benefit in enrollment.benefits) {
-          if (benefit.benefitName == _benefitToInsert.benefitName) {
-            alreadyInserted = true;
-          }
-        }
-
-        if (alreadyInserted) {
-          enrollment.removeBenefit(_benefitToInsert.benefitName);
-        }
-
-        enrollment.benefits.add(_benefitToInsert);
+        group = group.addBenefit(enrollment.id, _benefitToInsert);
       }
 
       await repository
@@ -45,3 +34,8 @@ class AddUnifiedGroupBenefitParams extends AddUnifiedBenefitsParams {
     required super.benefit,
   });
 }
+
+final addUnifiedGroupBenefitPvdr =
+    Provider<AddUnifiedGroupBenefit>((ref) => AddUnifiedGroupBenefit(
+          ref.read(groupsRepoPvdr),
+        ));

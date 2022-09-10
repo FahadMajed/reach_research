@@ -1,9 +1,12 @@
+import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
 class RemoveParticipants extends UseCase<Research, RemoveParticipantsParams> {
   final ResearchsRepository repository;
 
-  RemoveParticipants(this.repository);
+  RemoveParticipants(
+    this.repository,
+  );
 
   @override
   Future<Research> call(RemoveParticipantsParams params) async {
@@ -31,3 +34,8 @@ class RemoveParticipantsParams {
     required this.toRemoveIds,
   });
 }
+
+final removeParticipantsPvdr =
+    Provider<RemoveParticipants>((ref) => RemoveParticipants(
+          ref.read(researchsRepoPvdr),
+        ));

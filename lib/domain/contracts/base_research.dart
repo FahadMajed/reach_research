@@ -12,9 +12,9 @@ abstract class BaseResearch {
   Future<void> addParticipant(Participant participant);
 
   Future<void> startResearch(
-    List<Phase> phases,
-    List participantsResearcherChattedIds,
-  );
+    List<Phase> phases, {
+    List enrollmentsResearcherChattedIds,
+  });
 
   Future<void> togglePhase(int index);
 
@@ -30,4 +30,6 @@ abstract class BaseResearch {
   Future<void> updateParticipantsRequest(int newNumber);
 
   Future<void> endResearch();
+
+  Future<void> removeResearch();
 }

@@ -1,3 +1,4 @@
+import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
 class GetEnrolledResearch
@@ -17,3 +18,8 @@ class GetEnrolledResearchParams {
     required this.participantId,
   });
 }
+
+final getEnrolledResearchPvdr =
+    Provider<GetEnrolledResearch>((ref) => GetEnrolledResearch(
+          ref.read(researchsRepoPvdr),
+        ));

@@ -1,4 +1,4 @@
-import 'package:reach_core/core/data/repositories/repositories.dart';
+import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
 class EndResearch extends UseCase<void, EndResearchParams> {
@@ -35,3 +35,7 @@ class EndResearchParams {
     required this.research,
   });
 }
+
+final endResearchPvdr = Provider<EndResearch>((ref) => EndResearch(
+    researchsRepository: ref.read(researchsRepoPvdr),
+    researcherRepository: ref.read(researcherRepoPvdr)));

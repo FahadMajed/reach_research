@@ -16,21 +16,11 @@ class KickParticipantFromGroup
 
   @override
   Future<Group> call(KickParticipantFromGroupParams params) async {
-    final _groups = params.groups;
-    final partId = params.participant.participantId;
+    final _group = params.group;
 
-    int participantIndex = -1;
-    int participantGroupIndex = -1;
-    for (final group in _groups) {
-      participantIndex = group.getParticipantIndex(partId);
-      if (participantIndex != -1) {
-        participantGroupIndex = _groups.indexOf(group);
-        break;
-      }
-    }
+    final partId = params.participantId;
 
-    final updatedGroup = _groups[participantGroupIndex]
-      ..enrollments.removeAt(participantIndex);
+    final updatedGroup = _group.removeEnrollment(partId);
 
     await participantsRepository.removeEnrollment(
       partId,
@@ -47,7 +37,7 @@ class KickParticipantFromGroup
 
     await chatsRepository.removeParticipantFromGroupChat(
       updatedGroup.groupId,
-      params.participant,
+      partId,
     );
 
     return await groupsRepository
@@ -57,13 +47,20 @@ class KickParticipantFromGroup
 }
 
 class KickParticipantFromGroupParams {
-  final Participant participant;
-  final List<Group> groups;
+  final String participantId;
+  final Group group;
   final String researcherId;
 
   KickParticipantFromGroupParams({
-    required this.participant,
-    required this.groups,
+    required this.participantId,
+    required this.group,
     required this.researcherId,
   });
 }
+
+final kickParticipantFromGroupPvdr =
+    Provider<KickParticipantFromGroup>((ref) => KickParticipantFromGroup(
+          chatsRepository: ref.read(chatsRepoPvdr),
+          groupsRepository: ref.read(groupsRepoPvdr),
+          participantsRepository: ref.read(partsRepoPvdr),
+        ));

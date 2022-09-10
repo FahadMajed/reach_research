@@ -34,22 +34,26 @@ class RemoveGroup extends UseCase<List<Group>, RemoveGroupParams> {
       } else if (_toRemoveIndex == i) {
         //found
         for (final enrollment in _groups[i].enrollments) {
-          await participantsRepository.removeEnrollment(
-              enrollment.partId, _groups[i].researchId);
-          await chatsRepository.removeResearchIdFromChat(
-            Formatter.formatChatId(
-              params.researcherId,
-              enrollment.partId,
-            ),
+          participantsRepository.removeEnrollment(
+            enrollment.partId,
             _groups[i].researchId,
           );
         }
+        for (final chatId in params.chatsIds ?? []) {
+          chatsRepository.removeResearchIdFromChat(
+            chatId,
+            _groups[i].researchId,
+          );
+        }
+        chatsRepository.removeGroup(_groups[i].groupId);
+
         await _removeGroup();
       } else if (_toRemoveIndex < i) {
         //we need to rename groups
         // i - 1 since length is reduced after removal
         //we will not enter to this scope until the group was removed
-        final currentGroup = _groups[i - 1];
+
+        final currentGroup = _groups[i];
         final currentGroupId = currentGroup.groupId;
 
         groupsAfterRemove.add(currentGroup.copyWith(groupName: "Group $i"));
@@ -59,7 +63,7 @@ class RemoveGroup extends UseCase<List<Group>, RemoveGroupParams> {
         );
         await chatsRepository.updateGroupName(
           currentGroupId,
-          "Group $i",
+          "Group $i - ${params.researchTitle}",
         );
       }
     }
@@ -73,11 +77,20 @@ class RemoveGroup extends UseCase<List<Group>, RemoveGroupParams> {
 class RemoveGroupParams {
   final List<Group> groups;
   final int toRemoveIndex;
-  final String researcherId;
+  //for updataing chat name
+  final String? researchTitle;
+  final List? chatsIds;
 
   RemoveGroupParams({
     required this.groups,
     required this.toRemoveIndex,
-    required this.researcherId,
+    this.researchTitle,
+    this.chatsIds,
   });
 }
+
+final removeGroupPvdr = Provider<RemoveGroup>((ref) => RemoveGroup(
+      chatsRepository: ref.read(chatsRepoPvdr),
+      groupsRepository: ref.read(groupsRepoPvdr),
+      participantsRepository: ref.read(partsRepoPvdr),
+    ));

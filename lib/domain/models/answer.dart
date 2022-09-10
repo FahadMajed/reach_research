@@ -1,17 +1,17 @@
 class Answer {
   final bool myAnswer;
-  final bool actualAnswer;
+  final bool expectedAnswer;
   final String question;
   Answer({
     required this.myAnswer,
-    required this.actualAnswer,
+    required this.expectedAnswer,
     required this.question,
   });
 
   Map<String, dynamic> toMap() {
     return {
       'myAnswer': myAnswer,
-      'acctualAnswer': actualAnswer,
+      'acctualAnswer': expectedAnswer,
       'question': question,
     };
   }
@@ -19,14 +19,14 @@ class Answer {
   factory Answer.fromMap(Map<String, dynamic> map) {
     return Answer(
       myAnswer: map['myAnswer'],
-      actualAnswer: map['acctualAnswer'],
+      expectedAnswer: map['expectedAnswer'],
       question: map['question'],
     );
   }
 
   factory Answer.empty() => Answer(
         myAnswer: false,
-        actualAnswer: false,
+        expectedAnswer: false,
         question: "",
       );
 }

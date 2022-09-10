@@ -9,27 +9,26 @@ class AddUniqueBenefitForEnrollment
 
   @override
   Future<Enrollment> call(AddUniqueBenefitParams params) async {
-    final enrollment = params.enrollment;
+    Enrollment enrollment = params.enrollment;
     final Benefit benefitToInsert = params.benefit;
 
-    bool alreadyInserted = false;
-
-    for (final benefit in enrollment.benefits) {
-      if (benefit.benefitName == benefitToInsert.benefitName) {
-        alreadyInserted = true;
-      }
-    }
-
-    if (alreadyInserted) {
-      enrollment.removeBenefit(
-        benefitToInsert.benefitName,
-      );
-    }
-
-    final updatedEnrollment = enrollment..benefits.add(benefitToInsert);
+    enrollment = enrollment.addBenefit(benefitToInsert);
 
     return await repository
         .updateEnrollment(enrollment)
-        .then((_) => updatedEnrollment);
+        .then((_) => enrollment);
   }
+}
+
+abstract class AddUniqueBenefit<T, AddUniqueBenefitsParams>
+    extends UseCase<T, AddUniqueBenefitsParams> {}
+
+class AddUniqueBenefitParams {
+  final Enrollment enrollment;
+  final Benefit benefit;
+
+  AddUniqueBenefitParams({
+    required this.enrollment,
+    required this.benefit,
+  });
 }

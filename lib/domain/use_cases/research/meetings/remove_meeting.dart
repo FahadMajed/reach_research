@@ -1,3 +1,4 @@
+import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
 class RemoveMeeting extends UseCase<void, RemoveMeetingParams> {
@@ -18,3 +19,7 @@ class RemoveMeetingParams {
     required this.researchId,
   });
 }
+
+final removeMeetingPvdr = Provider<RemoveMeeting>((ref) => RemoveMeeting(
+      ref.read(researchsRepoPvdr),
+    ));

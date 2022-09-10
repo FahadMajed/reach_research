@@ -1,3 +1,4 @@
+import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
 class TogglePhase extends UseCase<Research, TogglePhaseParams> {
@@ -20,9 +21,8 @@ class TogglePhase extends UseCase<Research, TogglePhaseParams> {
       ],
     );
 
-    return await repository
-        .updateData(updatedResearch, updatedResearch.researchId)
-        .then((_) => updatedResearch);
+    repository.updateData(updatedResearch, updatedResearch.researchId);
+    return updatedResearch;
   }
 }
 
@@ -35,3 +35,7 @@ class TogglePhaseParams {
     required this.phaseIndex,
   });
 }
+
+final togglePhasePvdr = Provider<TogglePhase>((ref) => TogglePhase(
+      ref.read(researchsRepoPvdr),
+    ));

@@ -1,3 +1,4 @@
+import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
 class AddMeeting extends UseCase<Meeting, AddMeetingParams> {
@@ -20,3 +21,7 @@ class AddMeetingParams {
     required this.researchId,
   });
 }
+
+final addMeetingPvdr = Provider<AddMeeting>((ref) => AddMeeting(
+      ref.read(researchsRepoPvdr),
+    ));

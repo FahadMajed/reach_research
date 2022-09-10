@@ -1,13 +1,16 @@
 import 'package:reach_core/core/core.dart';
+import 'package:reach_research/data/source/remote/groups_remote_database.dart';
 import 'package:reach_research/domain/models/models.dart';
 
 class GroupsRepository extends BaseRepository<Group, void> {
-  GroupsRepository({required super.remoteDatabase});
+  GroupsRepository({required GroupsRemoteDatabase super.remoteDatabase});
+
+  GroupsRemoteDatabase get db => remoteDatabase as GroupsRemoteDatabase;
 
   Future<List<Group>> getGroupsForResearch(String researchId) async =>
       await getQuery(where('researchId', isEqualTo: researchId));
 
-  Future<Group?> getFirstAvailableGroup(
+  Future<String> getFirstAvailableGroupId(
     String researchId,
     int groupSize,
   ) async =>
@@ -16,7 +19,7 @@ class GroupsRepository extends BaseRepository<Group, void> {
             .where('numberOfEnrolled', isLessThan: groupSize)
             .limit(1),
       ).then(
-        (groups) => groups.isEmpty ? null : groups.first,
+        (groups) => groups.isEmpty ? "" : groups.first.groupId,
         onError: (e) => throw e,
       );
 
@@ -55,11 +58,27 @@ class GroupsRepository extends BaseRepository<Group, void> {
       );
     }
   }
+
+  Future<void> addEnrollmentToGroup(
+          String groupId, Enrollment enrollment) async =>
+      await db.addEnrollmentToGroup(
+        groupId,
+        enrollment,
+      );
+
+  Future<void> removeEnrollmentFromGroup(
+    String groupId,
+    Enrollment enrollment,
+  ) async =>
+      await db.removeEnrollmentFromGroup(
+        groupId,
+        enrollment,
+      );
 }
 
 final groupsRepoPvdr = Provider(
   (ref) => GroupsRepository(
-    remoteDatabase: RemoteDatabase(
+    remoteDatabase: GroupsRemoteDatabase(
       collectionPath: 'groups',
       fromMap: ((snapshot, _) => snapshot.data() == null
           ? Group.empty()

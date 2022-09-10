@@ -1,3 +1,4 @@
+import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
 class UpdateParticipantsRequest
@@ -27,3 +28,8 @@ class UpdateParticipantsRequestParams {
     required this.newNumber,
   });
 }
+
+final updateParticipantsRequestPvdr =
+    Provider<UpdateParticipantsRequest>((ref) => UpdateParticipantsRequest(
+          ref.read(researchsRepoPvdr),
+        ));

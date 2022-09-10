@@ -17,7 +17,10 @@ class AddResearch extends UseCase<Research, AddResearchParams> {
     );
 
     return await researchsRepository
-        .create(research, research.researchId)
+        .create(
+          research,
+          research.researchId,
+        )
         .then((_) => research);
   }
 }
@@ -27,3 +30,8 @@ class AddResearchParams {
 
   AddResearchParams({required this.research});
 }
+
+final addResearchPvdr = Provider<AddResearch>((ref) => AddResearch(
+      ref.read(researchsRepoPvdr),
+      ref.read(researcherRepoPvdr),
+    ));

@@ -1,3 +1,4 @@
+import 'package:reach_core/core/core.dart';
 import 'package:reach_research/research.dart';
 
 class GetGroupsForResearch
@@ -18,3 +19,6 @@ class GetGroupsForResearchParams {
     required this.researchId,
   });
 }
+
+final getGroupsPvdr = Provider<GetGroupsForResearch>(
+    (ref) => GetGroupsForResearch(ref.read(groupsRepoPvdr)));

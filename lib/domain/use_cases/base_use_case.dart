@@ -13,3 +13,4 @@ abstract class NoParamsUseCase<T> extends BaseUseCase<T> {
 
   Future<T> call();
 }
+//TODO MOVE TO CORE
