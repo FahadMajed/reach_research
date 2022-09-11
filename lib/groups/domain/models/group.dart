@@ -11,6 +11,8 @@ class Group extends Equatable {
   final String groupId;
   final List<Enrollment> enrollments;
 
+  int get numberOfEnrolled => enrollments.length;
+
   List<String> get enrollmentsIds => enrollments.map((e) => e.partId).toList();
   const Group({
     required this.groupName,

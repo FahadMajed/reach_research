@@ -6,11 +6,14 @@ class RemoveGroup extends UseCase<List<Group>, RemoveGroupParams> {
   final GroupsRepository groupsRepository;
   final ChatsRepository chatsRepository;
   final ParticipantsRepository participantsRepository;
-
+  final ResearchsRepository researchsRepository;
+  final RemoveParticipants removeParticipants;
   RemoveGroup({
     required this.groupsRepository,
     required this.chatsRepository,
     required this.participantsRepository,
+    required this.researchsRepository,
+    required this.removeParticipants,
   });
 
   RemoveGroupParams? _params;
@@ -23,6 +26,8 @@ class RemoveGroup extends UseCase<List<Group>, RemoveGroupParams> {
     _params = params;
     final List<Group> groupsAfterRemove = [];
 
+    List participantsToRemoveIds = _groups[_toRemoveIndex].enrollmentsIds;
+
     if (_groups.length == 1) throw CannotDeleteAllGroups();
 
     final length = _groups.length;
@@ -33,6 +38,7 @@ class RemoveGroup extends UseCase<List<Group>, RemoveGroupParams> {
         groupsAfterRemove.add(_groups[i]);
       } else if (_toRemoveIndex == i) {
         //found
+
         for (final enrollment in _groups[i].enrollments) {
           participantsRepository.removeEnrollment(
             enrollment.partId,
@@ -67,11 +73,19 @@ class RemoveGroup extends UseCase<List<Group>, RemoveGroupParams> {
         );
       }
     }
+
+    await removeParticipants.call(RemoveParticipantsParams(
+      researchId: _groups.first.researchId,
+      toRemoveIds: participantsToRemoveIds,
+    ));
+
     return groupsAfterRemove;
   }
 
   Future<void> _removeGroup() async =>
       await groupsRepository.removeGroup(_groups[_toRemoveIndex]);
+
+  String get researchId => _groups.first.researchId;
 }
 
 class RemoveGroupParams {
@@ -93,4 +107,6 @@ final removeGroupPvdr = Provider<RemoveGroup>((ref) => RemoveGroup(
       chatsRepository: ref.read(chatsRepoPvdr),
       groupsRepository: ref.read(groupsRepoPvdr),
       participantsRepository: ref.read(partsRepoPvdr),
+      researchsRepository: ref.read(researchsRepoPvdr),
+      removeParticipants: ref.read(removeParticipantsPvdr),
     ));

@@ -7,6 +7,5 @@ export 'phase.dart';
 export 'question.dart';
 export 'range_criterion.dart';
 export 'research.dart';
-export 'research_export.dart';
 export 'singular_research.dart';
 export 'value_criterion.dart';

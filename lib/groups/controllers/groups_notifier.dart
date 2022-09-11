@@ -1,6 +1,5 @@
 import 'package:reach_chats/chats.dart';
 import 'package:reach_core/core/core.dart';
-
 import 'package:reach_research/research.dart';
 
 class GroupsNotifier extends StateNotifier<AsyncValue<List<Group>>>
@@ -47,6 +46,7 @@ class GroupsNotifier extends StateNotifier<AsyncValue<List<Group>>>
   String get _researchTitle => research.title;
 
   ResearchNotifier get researchNotifier => read(researchPvdr.notifier);
+  ChatsListNotifier get chatsNotifier => read(chatsPvdr.notifier);
 
   Future<void> getGroups() async {
     state = const AsyncLoading();
@@ -182,26 +182,30 @@ class GroupsNotifier extends StateNotifier<AsyncValue<List<Group>>>
   }
 
   @override
-  Future<List<String>> removeGroup(
-    int groupIndex, {
-    List? chatIds,
-  }) async {
+  Future<void> removeGroup(int groupIndex) async {
     groupsLoading();
+
+    final chatsIds =
+        chatsNotifier.getPeerChatIdsForResearch(_groups[groupIndex].researchId);
+
     return await _removeGroup
         .call(
       RemoveGroupParams(
         groups: _groups,
         toRemoveIndex: groupIndex,
         researchTitle: _researchTitle,
-        chatsIds: chatIds,
+        chatsIds: chatsIds,
       ),
     )
-        .then((groups) {
-      groupsLoaded();
-      final kickedIds = _groups[groupIndex].enrollmentsIds;
-      state = AsyncData(groups);
-      return kickedIds;
-    }, onError: (e) => onGroupError(e));
+        .then(
+      (groups) {
+        groupsLoaded();
+
+        researchNotifier.getResearch();
+        state = AsyncData(groups);
+      },
+      onError: (e) => onGroupError(e),
+    );
   }
 
   void updateGroup(Group group) {

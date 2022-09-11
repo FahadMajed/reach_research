@@ -19,23 +19,15 @@ class AddParticipantToResearch
     _params = params;
     Research research = params.research;
 
-    int numberOfEnrolled = research.numberOfEnrolled;
-    int requestJoiners = research.requestJoiners;
-    bool isRequestingParticipants = research.isRequestingParticipants;
-
     if (researchIsFull) {
       throw ResearchIsFull();
     }
 
-    numberOfEnrolled++;
+    research = _addEnrollment(research);
 
-    research = copyResearchWith(research,
-        numberOfEnrolled: numberOfEnrolled,
-        enrolledIds: [...research.enrolledIds, partId]);
+    notificationsRepo?.subscribeToResearch(researchId);
 
-    await notificationsRepo?.subscribeToResearch(researchId);
-
-    await participantRepository.addEnrollment(
+    participantRepository.addEnrollment(
       partId,
       researchId,
     );
@@ -50,13 +42,12 @@ class AddParticipantToResearch
       );
 
       if (newGroupIsAdded) {
-        research =
-            copyResearchWith(research, groupsLength: research.groupsLength + 1);
+        research = _incrementGroupsLength(research);
       }
     }
 
     if (research is SingularResearch) {
-      await addParticipantToEnrollments(
+      addParticipantToEnrollments(
         AddParticipantParams(
           participant: participant,
           researchId: research.researchId,
@@ -65,36 +56,64 @@ class AddParticipantToResearch
     }
 
     if (research.researchState == ResearchState.ongoing) {
-      await chatsRepository.addResearchIdToPeerChat(
-        Formatter.formatChatId(
-          researcherId,
-          partId,
-        ),
-        researchId,
-      );
+      addResearchIdToPeerChat();
     }
 
-    if (isRequestingParticipants) {
-      requestJoiners++;
-      research = copyResearchWith(research, requestJoiners: requestJoiners);
+    if (research.isRequestingParticipants) {
+      research = _updateRequestJoiners(research);
 
-      if (research.requestedParticipantsNumber == requestJoiners) {
+      if (research.requestedParticipantsNumber == research.requestJoiners) {
         //STOP REQUEST
-        research = copyResearchWith(
-          research,
-          isRequestingParticipants: false,
-          requestJoiners: 0,
-          requestedParticipantsNumber: 0,
-        );
-        return await repository
-            .updateData(
-              research,
-              researchId,
-            )
-            .then((_) => research);
+        research = _stopRequest(research);
+        return await _updateResearch(research);
       }
     }
-    return await repository
+    return await _updateResearch(research);
+  }
+
+  void addResearchIdToPeerChat() {
+    chatsRepository.addResearchIdToPeerChat(
+      Formatter.formatChatId(
+        researcherId,
+        partId,
+      ),
+      researchId,
+    );
+  }
+
+  Research _addEnrollment(Research research) {
+    return copyResearchWith(
+      research,
+      numberOfEnrolled: research.numberOfEnrolled + 1,
+      enrolledIds: [...research.enrolledIds, partId],
+    );
+  }
+
+  Research _incrementGroupsLength(GroupResearch research) {
+    return copyResearchWith(
+      research,
+      groupsLength: research.groupsLength + 1,
+    );
+  }
+
+  Research _updateRequestJoiners(Research research) {
+    return copyResearchWith(
+      research,
+      requestJoiners: research.requestJoiners + 1,
+    );
+  }
+
+  Research _stopRequest(Research research) {
+    return copyResearchWith(
+      research,
+      isRequestingParticipants: false,
+      requestJoiners: 0,
+      requestedParticipantsNumber: 0,
+    );
+  }
+
+  Future<Research> _updateResearch(Research research) {
+    return repository
         .updateData(
           research,
           researchId,

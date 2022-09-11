@@ -9,7 +9,7 @@ abstract class BaseGroup {
   });
 
 //returns kicked participants ids
-  Future<List<String>> removeGroup(int groupIndex);
+  Future<void> removeGroup(int groupIndex);
 
   Future<void> kickParticipant(int groupIndex, Participant participant);
 

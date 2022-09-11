@@ -11,17 +11,16 @@ class AddResearch extends UseCase<Research, AddResearchParams> {
   Future<Research> call(AddResearchParams params) async {
     final research = params.research;
 
-    await researcherRepository.addResearch(
+    researcherRepository.addResearch(
       research.researcher.researcherId,
       research.researchId,
     );
 
-    return await researchsRepository
-        .create(
-          research,
-          research.researchId,
-        )
-        .then((_) => research);
+    researchsRepository.create(
+      research,
+      research.researchId,
+    );
+    return research;
   }
 }
 

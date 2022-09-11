@@ -22,12 +22,12 @@ class KickParticipantFromGroup
 
     final updatedGroup = _group.removeEnrollment(partId);
 
-    await participantsRepository.removeEnrollment(
+    participantsRepository.removeEnrollment(
       partId,
       updatedGroup.researchId,
     );
 
-    await chatsRepository.removeResearchIdFromChat(
+    chatsRepository.removeResearchIdFromChat(
       Formatter.formatChatId(
         params.researcherId,
         partId,
@@ -35,7 +35,7 @@ class KickParticipantFromGroup
       updatedGroup.researchId,
     );
 
-    await chatsRepository.removeParticipantFromGroupChat(
+    chatsRepository.removeParticipantFromGroupChat(
       updatedGroup.groupId,
       partId,
     );

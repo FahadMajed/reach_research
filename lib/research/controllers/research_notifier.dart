@@ -10,6 +10,8 @@ class ResearchNotifier extends StateNotifier<AsyncValue<Research?>>
   Research get research => state.value!;
   late final String _uid;
 
+  get researchId => research.researchId;
+
   void set(Research research) => state = AsyncData(research);
 
   ResearchNotifier({
@@ -20,6 +22,7 @@ class ResearchNotifier extends StateNotifier<AsyncValue<Research?>>
     _uid = uid;
     _addParticipantToResearch = read(addParticipantToResearchPvdr);
     _addResearch = read(addResearchPvdr);
+    _getMeetings = read(getMeetingsPvdr);
     _addMeeting = read(addMeetingPvdr);
     _removeMeeting = read(removeMeetingPvdr);
     _updateMeeting = read(updateMeetingPvdr);
@@ -56,6 +59,7 @@ class ResearchNotifier extends StateNotifier<AsyncValue<Research?>>
 
   late final TogglePhase _togglePhase;
 
+  late final GetMeetings _getMeetings;
   late final AddMeeting _addMeeting;
   late final RemoveMeeting _removeMeeting;
   late final UpdateMeeting _updateMeeting;
@@ -72,6 +76,9 @@ class ResearchNotifier extends StateNotifier<AsyncValue<Research?>>
   late final RemoveResearch _removeResearch;
 
   ParticipantNotifier get participantNotifier => read(partPvdr.notifier);
+  ResearcherNotifier get researcherNotifier => read(researcherPvdr.notifier);
+  GroupsNotifier get groupsNotifier => read(groupsPvdr.notifier);
+  EnrollmentsNotifier get enrollmentsNotifier => read(enrollmentsPvdr.notifier);
 
   @override
   Future<void> getResearch() async {
@@ -105,12 +112,17 @@ class ResearchNotifier extends StateNotifier<AsyncValue<Research?>>
     researchLoading();
     await _addResearch
         .call(
-          AddResearchParams(research: research),
-        )
+      AddResearchParams(research: research),
+    )
         .then(
-          (research) => state = AsyncData(research),
-          onError: (e) => onResearchError(e),
-        );
+      (research) {
+        //UPDATE
+        researcherNotifier.getResearcher();
+        state = AsyncData(research);
+      },
+      onError: (e) => onResearchError(e),
+    );
+
     researchLoaded();
   }
 
@@ -125,7 +137,12 @@ class ResearchNotifier extends StateNotifier<AsyncValue<Research?>>
         .then(
       (research) {
         participantNotifier.getParticipant();
-        return state = AsyncData(research);
+        if (research is GroupResearch) {
+          groupsNotifier.getGroups();
+        } else {
+          enrollmentsNotifier.getEnrollmentsForResearch();
+        }
+        state = AsyncData(research);
       },
       onError: (e) => onResearchError(e),
     );
@@ -157,12 +174,24 @@ class ResearchNotifier extends StateNotifier<AsyncValue<Research?>>
   }
 
   @override
+  Future<void> getMeetings({bool isRefreseshing = false}) async {
+    if (isRefreseshing == true || research.meetings.isEmpty) {
+      researchLoading();
+      await _getMeetings.call(GetMeetingsParams(researchId: researchId)).then(
+            (meetings) => updateState(meetings: meetings),
+            onError: (e) => onResearchError(e),
+          );
+      researchLoaded();
+    }
+  }
+
+  @override
   Future<void> addMeeting(Meeting meeting) async {
     researchLoading();
     _addMeeting
         .call(AddMeetingParams(
           meeting: meeting,
-          researchId: research.researchId,
+          researchId: researchId,
         ))
         .then(
           (meeting) => updateState(meetings: [...research.meetings, meeting]),
@@ -178,7 +207,7 @@ class ResearchNotifier extends StateNotifier<AsyncValue<Research?>>
     _removeMeeting
         .call(RemoveMeetingParams(
           meeting: meeting,
-          researchId: research.researchId,
+          researchId: researchId,
         ))
         .then(
           (_) => updateState(meetings: research.meetings..remove(meeting)),
@@ -193,7 +222,7 @@ class ResearchNotifier extends StateNotifier<AsyncValue<Research?>>
     await _updateMeeting
         .call(UpdateMeetingParams(
           meeting: meeting,
-          researchId: research.researchId,
+          researchId: researchId,
         ))
         .then(
           (_) => updateState(meetings: [
@@ -219,20 +248,20 @@ class ResearchNotifier extends StateNotifier<AsyncValue<Research?>>
             onError: (e) => onResearchError(e),
           );
 
-  @override
-  Future<void> removeParticipants(List toRemoveIds) async {
-    researchLoading();
-    await _removeParticipants
-        .call(RemoveParticipantsParams(
-          research: research,
-          toRemoveIds: toRemoveIds,
-        ))
-        .then(
-          (research) => state = AsyncData(research),
-          onError: (e) => onResearchError(e),
-        );
-    researchLoaded();
-  }
+  // @override
+  // Future<void> removeParticipants(List toRemoveIds) async {
+  //   researchLoading();
+  //   await _removeParticipants
+  //       .call(RemoveParticipantsParams(
+  //         research: research,
+  //         toRemoveIds: toRemoveIds,
+  //       ))
+  //       .then(
+  //         (research) => state = AsyncData(research),
+  //         onError: (e) => onResearchError(e),
+  //       );
+  //   researchLoaded();
+  // }
 
   @override
   Future<void> kickParticipant(String participantId) async {
@@ -312,7 +341,7 @@ class ResearchNotifier extends StateNotifier<AsyncValue<Research?>>
     researchLoading();
     await _removeResearch
         .call(RemoveResearchParams(
-          researchId: research.researchId,
+          researchId: researchId,
           enrolledIds: research.enrolledIds,
           researcherId: research.researcher.researcherId,
         ))

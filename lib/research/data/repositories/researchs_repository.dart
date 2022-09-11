@@ -79,6 +79,15 @@ class ResearchsRepository extends BaseRepository<Research, Meeting> {
         researchId,
         'groupsLength',
       );
+
+  Future<void> removeParticipants(String researchId, List removedIds) async {
+    //TODO SEPERATE IT TO RESEARCHS DATASOURCE
+    await remoteDatabase.updateDocumentRaw({
+      'numberOfEnrolled': FieldValue.increment(-removedIds.length),
+      'groupsLength': FieldValue.increment(-1),
+      'enrolledIds': FieldValue.arrayRemove(removedIds),
+    }, researchId);
+  }
 }
 
 final researchsRepoPvdr = Provider(
