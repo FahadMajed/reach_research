@@ -15,10 +15,20 @@ dependencies:
     git: 
       url: https://github.com/FahadMajed/reach_core
       ref: dev
+   
   reach_chats:
-    path: /Users/fahad/AndroidStudioProjects/reach_researchers/packages/reach_chats
+    git: 
+      url: https://github.com/FahadMajed/reach_chats
+      ref: dev
   reach_auth:
-    path: /Users/fahad/AndroidStudioProjects/reach_researchers/packages/reach_auth
+    git: 
+      url: https://github.com/FahadMajed/reach_auth
+      ref: dev
+ 
+  # reach_chats:
+  #   path: /Users/fahad/AndroidStudioProjects/reach_researchers/packages/reach_chats
+  # reach_auth:
+  #   path: /Users/fahad/AndroidStudioProjects/reach_researchers/packages/reach_auth
 
 
 
