@@ -13,10 +13,12 @@ class EnrollmentStateController extends AsyncStateControIIer<Enrollment> {
     participant.whenData((participant) => participant != null ? getEnrollment(participant) : null);
   }
 
-  Future<void> getEnrollment(Participant participant) async => await _getEnrollment.call(participant).then(
-        (enrollment) => emitData(enrollment),
-        onError: (e) => throw e,
-      );
+  Future<void> getEnrollment(Participant participant) async => participant.currentEnrollments.isNotEmpty
+      ? await _getEnrollment.call(participant).then(
+            (enrollment) => emitData(enrollment),
+            onError: (e) => throw e,
+          )
+      : null;
 
   Enrollment get enrollment => state.value!;
 }
